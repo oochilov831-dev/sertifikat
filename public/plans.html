@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tariflar — Sertifikat Tizimi</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/dashboard.html" class="nav-brand">🎓 Sertifikat</a>
+  <div class="nav-links">
+    <a href="/dashboard.html" class="nav-link">Kabinet</a>
+    <a href="/plans.html"     class="nav-link active">Tariflar</a>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main" style="max-width:960px; margin:0 auto; width:100%;">
+    <h1 style="font-size:28px; font-weight:800; text-align:center; margin-bottom:8px;">Tarif Rejalari</h1>
+    <p style="text-align:center; color:var(--text-muted); margin-bottom:40px;">Professional sertifikatlar uchun eng qulay narxlar</p>
+
+  <div class="plans-grid" id="plans-grid">
+    <div style="text-align:center; padding:40px; grid-column:1/-1;">
+      <div class="spinner" style="margin:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Payment history -->
+  <div class="card" style="margin-top:40px;">
+    <h2 style="font-size:18px; font-weight:700; margin-bottom:20px;">To'lovlar tarixi</h2>
+    <div id="payment-history">
+      <div style="text-align:center; padding:20px;"><div class="spinner" style="margin:auto;"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment modal -->
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="pay-modal-title">To'lov</h3>
+      <button class="modal-close" onclick="closeModal('pay-modal')">&times;</button>
+    </div>
+    <div id="pay-modal-body">
+      <div class="form-group">
+        <label class="form-label">To'lov tizimi</label>
+        <div style="display:flex; gap:12px;">
+          <label style="flex:1; border:2px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; text-align:center; font-weight:600;">
+            <input type="radio" name="provider" value="click" checked style="display:none;">
+            <div style="font-size:22px;">💳</div>
+            Oflayn
+          </label>
+          <label style="flex:1; border:2px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; text-align:center; font-weight:600;">
+            <input type="radio" name="provider" value="payme" style="display:none;">
+            <div style="font-size:22px;">💰</div>
+            Naqd
+          </label>
+          <label style="flex:1; border:2px solid var(--border); border-radius:8px; padding:14px; cursor:pointer; text-align:center; font-weight:600;">
+            <input type="radio" name="provider" value="uzum" style="display:none;">
+            <div style="font-size:22px;">🏦</div>
+            Bank
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Muddat</label>
+        <select class="form-control" id="pay-months">
+          <option value="1">1 oy</option>
+          <option value="3">3 oy (-10%)</option>
+          <option value="6">6 oy (-15%)</option>
+          <option value="12">12 oy (-20%)</option>
+        </select>
+      </div>
+      <div style="background:var(--bg); border-radius:8px; padding:16px; margin-bottom:20px; text-align:center;">
+        <div style="font-size:24px; font-weight:800;" id="pay-total">—</div>
+        <div style="font-size:13px; color:var(--text-muted);">To'lanadigan summa</div>
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" id="pay-btn" onclick="initiatePayment()">
+        Oflayn to'lov arizasini yaratish
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (!requireAuth()) throw '';
+
+  let selectedPlan = null;
+  let plansData    = {};
+
+  async function loadPlans() {
+    const data = await Api.payments.plans();
+    plansData = data;
+
+    const me  = await Api.auth.me();
+    const sub = me.subscription;
+
+    document.getElementById('plans-grid').innerHTML = Object.entries(data).map(([key, plan]) => {
+      const isCurrent = sub && sub.plan === key;
+      const isPop     = key === 'standard';
+
+      return `
+        <div class="plan-card ${isPop ? 'popular' : ''}">
+          ${isPop ? '<div class="plan-badge">Tavsiya etiladi</div>' : ''}
+          <h3 style="font-size:20px; font-weight:700;">${plan.name}</h3>
+          <div class="plan-price">
+            ${plan.price === 0 ? 'Bepul' : fmt.money(plan.price)}
+            ${plan.price > 0 ? '<span>/ oy</span>' : ''}
+          </div>
+          <ul class="plan-features">
+            <li>${plan.limit === -1 ? 'Cheksiz sertifikat' : plan.limit + ' ta sertifikat/oy'}</li>
+            <li>${plan.watermark ? 'Suv belgisi (watermark)' : 'Watermarksiz'}</li>
+            <li>${plan.custom_template ? 'O\'z shabloningiz' : 'Standart shablonlar'}</li>
+            ${key !== 'free' ? '<li>Ommaviy generatsiya (CSV)</li>' : ''}
+            ${key === 'pro'  ? '<li>QR tekshiruv tizimi</li><li>Ustunlik qo\'llab-quvvatlash</li>' : ''}
+          </ul>
+          ${isCurrent
+            ? `<button class="btn btn-outline btn-full" disabled>✅ Joriy tarif</button>`
+            : key === 'free'
+              ? `<button class="btn btn-outline btn-full" onclick="activateFree()">Bepulni tanlash</button>`
+              : `<button class="btn btn-primary btn-full" onclick="openPayModal('${key}')">Obuna bo'lish</button>`}
+        </div>`;
+    }).join('');
+  }
+
+  async function loadHistory() {
+    const data = await Api.payments.history(1);
+    if (!data.items.length) {
+      document.getElementById('payment-history').innerHTML =
+        '<p style="color:var(--text-muted); text-align:center; padding:20px;">To\'lovlar tarixi mavjud emas</p>';
+      return;
+    }
+    document.getElementById('payment-history').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tarif</th><th>Summa</th><th>To'lov tizimi</th><th>Holat</th><th>Sana</th></tr></thead>
+          <tbody>
+            ${data.items.map(p => `
+              <tr>
+                <td><strong>${fmt.plan(p.plan)}</strong></td>
+                <td>${fmt.money(p.amount)}</td>
+                <td style="text-transform:capitalize;">${p.provider}</td>
+                <td><span class="badge ${p.status === 'success' ? 'badge-success' : p.status === 'pending' ? 'badge-warning' : 'badge-danger'}">
+                  ${p.status === 'success' ? 'Muvaffaqiyatli' : p.status === 'pending' ? 'Kutilmoqda' : 'Bekor qilingan'}
+                </span></td>
+                <td>${p.paid_at ? fmt.date(p.paid_at) : '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  function openPayModal(plan) {
+    selectedPlan = plan;
+    document.getElementById('pay-modal-title').textContent = `${plansData[plan].name} tarifiga obuna`;
+    updateTotal();
+    document.getElementById('pay-modal').classList.add('open');
+  }
+
+  function updateTotal() {
+    if (!selectedPlan) return;
+    const months  = parseInt(document.getElementById('pay-months').value);
+    const base    = plansData[selectedPlan].price;
+    const disc    = months >= 12 ? .8 : months >= 6 ? .85 : months >= 3 ? .9 : 1;
+    document.getElementById('pay-total').textContent = fmt.money(Math.round(base * months * disc));
+  }
+
+  document.getElementById('pay-months').addEventListener('change', updateTotal);
+
+  async function initiatePayment() {
+    const provider = document.querySelector('input[name=provider]:checked')?.value || 'click';
+    const months   = parseInt(document.getElementById('pay-months').value);
+    const btn      = document.getElementById('pay-btn');
+    btn.disabled   = true;
+    btn.textContent = 'Ariza yaratilmoqda...';
+
+    try {
+      await Api.payments.initiate({ plan: selectedPlan, provider, months });
+      toast('To\'lov arizasi yaratildi. Admin tasdiqlagandan keyin tarif faollashadi.');
+      closeModal('pay-modal');
+      loadHistory();
+    } catch (err) {
+      toast(err.message, 'error');
+      btn.disabled    = false;
+      btn.textContent = 'Oflayn to\'lov arizasini yaratish';
+    }
+  }
+
+  async function activateFree() {
+    try {
+      await Api.payments.free();
+      toast('Bepul tarif faollashtirildi');
+      setTimeout(() => location.reload(), 1000);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // Provider radio style
+  document.addEventListener('change', (e) => {
+    if (e.target.name !== 'provider') return;
+    document.querySelectorAll('input[name=provider]').forEach(r => {
+      r.closest('label').style.borderColor = r.checked ? 'var(--primary)' : 'var(--border)';
+    });
+  });
+
+  loadPlans();
+  loadHistory();
+</script>
+    </main>
+</div>
+<script src="/js/toast.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/dashboard-sidebar.js"></script>
+<script src="/js/bottom-nav.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

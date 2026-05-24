@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promokodlar — Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .grid2 { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
+    @media(max-width:900px) { .grid2 { grid-template-columns: 1fr; } }
+    .form-group label { display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px; }
+    .promo-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px; }
+    .promo-code { font-family: monospace; font-size: 18px; font-weight: 800; color: var(--primary); background: var(--primary-light); padding: 4px 10px; border-radius: 6px; display: inline-block; }
+    .stat { font-size: 12px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">🛡️ Admin Panel</a>
+  <div class="nav-links">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:12px;" id="admin-name"></span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <h1 style="font-size:22px;font-weight:800;margin-bottom:24px;">🏷 Promokodlar boshqaruvi</h1>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;">Yangi promokod</h3>
+        <div class="form-group"><label>Kod (lotin, 3-50 belgi)</label>
+          <input id="f-code" class="form-control" placeholder="MASALAN: BAYRAM10" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group"><label>Chegirma turi</label>
+          <select id="f-type" class="form-control">
+            <option value="percent">Foiz (%)</option>
+            <option value="fixed">Aniq summa (so'm)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Qiymat</label>
+          <input id="f-discount" class="form-control" type="number" placeholder="10">
+        </div>
+        <div class="form-group"><label>Tarif (ixtiyoriy)</label>
+          <select id="f-plan" class="form-control">
+            <option value="">Barchasi</option>
+            <option value="standard">Standart</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Maksimal foydalanish (ixtiyoriy)</label>
+          <input id="f-max" class="form-control" type="number" placeholder="100">
+        </div>
+        <div class="form-group"><label>Tugash sanasi (ixtiyoriy)</label>
+          <input id="f-to" class="form-control" type="date">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="createCode()">+ Yaratish</button>
+      </div>
+
+      <div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;">Mavjud kodlar</h3>
+        <div id="codes-list">
+          <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:auto;"></div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/toast.js"></script>
+<script>
+  requireAuth();
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!['admin', 'super_admin'].includes(me.role)) { location.href = '/dashboard.html'; throw ''; }
+  document.getElementById('admin-name').textContent = me.name || '';
+
+  async function loadCodes() {
+    try {
+      const d = await Api.get('/admin/promo-codes');
+      const list = document.getElementById('codes-list');
+      if (!d.items.length) {
+        list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Hech qanday kod yo\'q</div>';
+        return;
+      }
+      list.innerHTML = d.items.map(c => {
+        const left = c.max_uses ? `${c.used_count}/${c.max_uses}` : `${c.used_count} marta`;
+        const value = c.type === 'percent' ? `${c.discount}%` : Number(c.discount).toLocaleString('uz-UZ') + " so'm";
+        const expired = c.valid_to && new Date(c.valid_to) < new Date();
+        const inactive = !c.is_active || expired;
+        return `
+          <div class="promo-card" style="${inactive ? 'opacity:.5;' : ''}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div>
+                <span class="promo-code">${esc(c.code)}</span>
+                <span style="margin-left:10px;font-weight:700;color:var(--success);">${value}</span>
+                ${c.plan_filter ? `<span class="badge badge-primary" style="margin-left:6px;">${c.plan_filter}</span>` : ''}
+                ${expired ? '<span class="badge badge-danger" style="margin-left:6px;">muddati tugagan</span>' : ''}
+                ${!c.is_active ? '<span class="badge badge-warning" style="margin-left:6px;">faol emas</span>' : ''}
+              </div>
+              ${c.is_active ? `<button class="btn btn-outline btn-sm" onclick="deleteCode(${c.id})" style="color:#ef4444;border-color:#fecaca;">O'chirish</button>` : ''}
+            </div>
+            <div class="stat" style="margin-top:8px;">
+              Foydalanildi: <strong>${left}</strong> &middot;
+              Yaratildi: ${new Date(c.created_at).toLocaleDateString('uz-UZ')}
+              ${c.valid_to ? '&middot; Tugaydi: ' + new Date(c.valid_to).toLocaleDateString('uz-UZ') : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  async function createCode() {
+    const data = {
+      code:     document.getElementById('f-code').value.trim().toUpperCase(),
+      type:     document.getElementById('f-type').value,
+      discount: parseInt(document.getElementById('f-discount').value, 10),
+      plan_filter: document.getElementById('f-plan').value || null,
+      max_uses: document.getElementById('f-max').value || null,
+      valid_to: document.getElementById('f-to').value || null,
+    };
+    try {
+      await Api.post('/admin/promo-codes', data);
+      window.Toast?.success('Promokod yaratildi');
+      document.getElementById('f-code').value = '';
+      document.getElementById('f-discount').value = '';
+      document.getElementById('f-max').value = '';
+      document.getElementById('f-to').value = '';
+      loadCodes();
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  async function deleteCode(id) {
+    if (!confirm("Bu kodni o'chirishni tasdiqlaysizmi?")) return;
+    try {
+      await Api.delete('/admin/promo-codes/' + id);
+      window.Toast?.success("Kod o'chirildi");
+      loadCodes();
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  loadCodes();
+</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+</body>
+</html>

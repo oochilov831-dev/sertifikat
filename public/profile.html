@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil — Sertifikat Tizimi</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body { background: #f1f5f9; min-height: 100vh; }
+    .page { max-width: 780px; margin: 0 auto; padding: 28px 16px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #6366f1; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 20px; }
+    .back-link:hover { text-decoration: underline; }
+
+    .profile-header { background: linear-gradient(135deg, #6366f1, #4f46e5); border-radius: 20px; padding: 32px 28px; color: #fff; display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar { width: 88px; height: 88px; border-radius: 50%; background: rgba(255,255,255,.25); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; overflow: hidden; border: 3px solid rgba(255,255,255,.35); }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-edit { position: absolute; bottom: -2px; right: -2px; width: 30px; height: 30px; background: #fff; color: #6366f1; border-radius: 50%; border: 2px solid #6366f1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; transition: transform .15s; }
+    .avatar-edit:hover { transform: scale(1.1); }
+    .profile-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .profile-header p  { font-size: 14px; opacity: .85; }
+    .plan-badge { display: inline-block; background: rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; margin-top: 8px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:600px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); padding: 24px; }
+    .card h2 { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; color: #1e293b; transition: border .2s; }
+    .form-group input:focus { outline: none; border-color: #6366f1; }
+    .form-group input:disabled { background: #f8fafc; color: #94a3b8; }
+
+    .btn-primary { width: 100%; padding: 13px; background: #6366f1; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .2s; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-danger { width: 100%; padding: 13px; background: #fff; color: #ef4444; border: 2px solid #fecaca; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; margin-top: 8px; }
+    .btn-danger:hover { background: #fef2f2; border-color: #ef4444; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .stat-item { background: #f8fafc; border-radius: 12px; padding: 14px 16px; text-align: center; }
+    .stat-item .val { font-size: 24px; font-weight: 800; color: #6366f1; }
+    .stat-item .lbl { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+
+    .progress-bar { background: #e2e8f0; border-radius: 8px; height: 8px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { background: linear-gradient(90deg, #6366f1, #8b5cf6); height: 100%; border-radius: 8px; transition: width .5s; }
+
+    .sub-info { font-size: 13px; color: #64748b; }
+    .sub-info strong { color: #1e293b; }
+
+    .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: none; }
+    .alert-success { background: #dcfce7; color: #15803d; }
+    .alert-error   { background: #fee2e2; color: #b91c1c; }
+
+    .danger-zone { border: 2px solid #fecaca; border-radius: 16px; padding: 20px; margin-top: 20px; }
+    .danger-zone h3 { color: #ef4444; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .danger-zone p  { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+
+    /* Logo upload */
+    .logo-box { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .logo-preview { width: 80px; height: 80px; border: 2px dashed #cbd5e1; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 24px; background: #f8fafc; overflow: hidden; flex-shrink: 0; }
+    .logo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .logo-actions { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .btn-soft { background: #f1f5f9; color: #475569; border: none; border-radius: 8px; padding: 8px 14px; font: 600 13px inherit; cursor: pointer; transition: background .15s; }
+    .btn-soft:hover { background: #e2e8f0; }
+    .btn-soft.danger { color: #ef4444; }
+    .btn-soft.danger:hover { background: #fee2e2; }
+
+    /* Delete modal */
+    .del-modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .del-modal-overlay.open { display: flex; }
+    .del-modal { background: #fff; border-radius: 18px; padding: 28px; max-width: 460px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,.2); }
+    .del-modal h3 { color: #ef4444; font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .del-modal p { color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+    .del-modal .warn-list { background: #fef2f2; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+    .del-modal .warn-list li { font-size: 13px; color: #991b1b; margin: 4px 0 4px 20px; }
+    .del-modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .del-modal-actions button { flex: 1; padding: 11px; border-radius: 10px; font: 700 14px inherit; cursor: pointer; border: none; transition: all .15s; }
+    .btn-cancel { background: #f1f5f9; color: #475569; }
+    .btn-cancel:hover { background: #e2e8f0; }
+    .btn-confirm { background: #ef4444; color: #fff; }
+    .btn-confirm:hover { background: #dc2626; }
+    .btn-confirm:disabled { opacity: .5; cursor: not-allowed; }
+
+    @media(max-width:600px) {
+      .page {
+        padding: 16px 12px calc(96px + env(safe-area-inset-bottom));
+      }
+      .back-link { margin-bottom: 14px; }
+      .profile-header {
+        align-items: flex-start;
+        gap: 16px;
+        padding: 22px 18px;
+        border-radius: 10px;
+      }
+      .avatar { width: 72px; height: 72px; font-size: 28px; }
+      .avatar-edit { width: 30px; height: 30px; }
+      .profile-header h1 { font-size: 21px; line-height: 1.2; word-break: break-word; }
+      .profile-header p { word-break: break-all; }
+      .card { border-radius: 8px; padding: 18px; }
+      .card h2 { font-size: 15px; margin-bottom: 16px; }
+      .logo-box { align-items: flex-start; }
+      .logo-preview { width: 68px; height: 68px; border-radius: 8px; }
+      .stat-grid { gap: 10px; }
+      .stat-item { border-radius: 8px; padding: 12px 10px; }
+      .form-group input { min-height: 44px; font-size: 16px; }
+      .danger-zone { border-radius: 8px; padding: 16px; }
+      .del-modal-overlay { align-items: flex-end; padding: 0; }
+      .del-modal { border-radius: 10px 10px 0 0; max-width: 100%; padding: 22px; }
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/dashboard.html" class="nav-brand">🎓 Sertifikat</a>
+  <div class="nav-links">
+    <a href="/dashboard.html"  class="nav-link">Kabinet</a>
+    <a href="/constructor.html" class="nav-link">Yaratish</a>
+    <a href="/plans.html"      class="nav-link">Tariflar</a>
+    <a href="/profile.html"    class="nav-link active">Profil</a>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main" style="max-width:960px; margin:0 auto; width:100%;">
+    <div class="page" style="max-width:100%; padding:28px 0;">
+
+  <!-- Header -->
+  <div class="profile-header">
+    <div class="avatar-wrap">
+      <div class="avatar" id="avatar-icon">👤</div>
+      <label class="avatar-edit" for="avatar-file" title="Avatar o'zgartirish">📷</label>
+      <input type="file" id="avatar-file" accept="image/*" style="display:none;">
+    </div>
+    <div>
+      <h1 id="header-name">Yuklanmoqda...</h1>
+      <p id="header-email">—</p>
+      <span class="plan-badge" id="header-plan">—</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Chap ustun -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Profil ma'lumotlari -->
+      <div class="card">
+        <h2>✏️ Profil ma'lumotlari</h2>
+        <div class="alert alert-success" id="profile-ok">Profil yangilandi!</div>
+        <div class="alert alert-error"   id="profile-err"></div>
+        <form id="profile-form">
+          <div class="form-group">
+            <label>To'liq ism</label>
+            <input type="text" id="f-name" placeholder="Ism Familiya" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="f-email" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>Telefon</label>
+            <input type="text" id="f-phone" placeholder="+998901234567">
+          </div>
+          <div class="form-group">
+            <label>Tashkilot nomi</label>
+            <input type="text" id="f-company" placeholder="Kompaniya yoki o'quv markaz">
+          </div>
+          <button type="submit" class="btn-primary">💾 Saqlash</button>
+        </form>
+      </div>
+
+      <!-- Tashkilot logosi -->
+      <div class="card">
+        <h2>🖼️ Tashkilot logosi</h2>
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Logo sertifikatlarda chap pastki burchakda chiqadi (max 2MB, PNG/JPG)</p>
+        <div class="logo-box">
+          <div class="logo-preview" id="logo-preview">🖼️</div>
+          <div class="logo-actions">
+            <input type="file" id="logo-file" accept="image/*" style="display:none;">
+            <button class="btn-soft" onclick="document.getElementById('logo-file').click()">📤 Logo yuklash</button>
+            <button class="btn-soft" id="logo-clean-btn" onclick="openBgRemover('logo')" style="display:none;background:#e0e7ff;color:#4f46e5;">🪄 Fondan tozalash</button>
+            <button class="btn-soft danger" id="logo-del-btn" onclick="deleteLogo()" style="display:none;">🗑 Logoni o'chirish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tashkilot rahbari imzosi -->
+      <div class="card">
+        <h2>✍️ Tashkilot rahbari imzosi</h2>
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Imzo sertifikatlardagi tegishli maydonda chiqadi (max 2MB, PNG/JPG)</p>
+        <div class="logo-box">
+          <div class="logo-preview" id="sig-preview" style="background:#fff;border-style:solid;border-color:#cbd5e1;">✍️</div>
+          <div class="logo-actions">
+            <input type="file" id="sig-file" accept="image/*" style="display:none;">
+            <button class="btn-soft" onclick="document.getElementById('sig-file').click()">📤 Imzo yuklash</button>
+            <button class="btn-soft" id="sig-clean-btn" onclick="openBgRemover('signature')" style="display:none;background:#e0e7ff;color:#4f46e5;">🪄 Fondan tozalash</button>
+            <button class="btn-soft danger" id="sig-del-btn" onclick="deleteSignature()" style="display:none;">🗑 Imzoni o'chirish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tashkilot muhri (shtamp) -->
+      <div class="card">
+        <h2>◎ Tashkilot muhri (shtamp)</h2>
+        <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Muhr sertifikatlardagi tegishli maydonda chiqadi (max 2MB, PNG/JPG)</p>
+        <div class="logo-box">
+          <div class="logo-preview" id="seal-preview" style="background:#fff;border-style:solid;border-color:#cbd5e1;">◎</div>
+          <div class="logo-actions">
+            <input type="file" id="seal-file" accept="image/*" style="display:none;">
+            <button class="btn-soft" onclick="document.getElementById('seal-file').click()">📤 Muhr yuklash</button>
+            <button class="btn-soft" id="seal-clean-btn" onclick="openBgRemover('seal')" style="display:none;background:#e0e7ff;color:#4f46e5;">🪄 Fondan tozalash</button>
+            <button class="btn-soft danger" id="seal-del-btn" onclick="deleteSeal()" style="display:none;">🗑 Muhrni o'chirish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2FA -->
+      <div class="card">
+        <h2>🔐 Ikki bosqichli autentifikatsiya (2FA)</h2>
+        <div id="2fa-status" style="font-size:13px;color:#64748b;margin-bottom:12px;">Yuklanmoqda...</div>
+        <button class="btn-primary" id="2fa-btn" onclick="toggle2FA()" style="display:none;">Yoqish</button>
+        <div id="2fa-setup" style="display:none;margin-top:14px;">
+          <p style="font-size:13px;color:#64748b;margin-bottom:10px;">Google Authenticator, Authy yoki Microsoft Authenticator ilovasida ushbu QR ni skan qiling:</p>
+          <img id="2fa-qr" style="display:block;margin:0 auto 14px;background:#fff;padding:10px;border-radius:8px;border:1px solid #e2e8f0;" alt="">
+          <p style="font-size:12px;color:#94a3b8;text-align:center;margin-bottom:14px;">Manual kiritish: <code id="2fa-secret" style="background:#f1f5f9;padding:3px 8px;border-radius:4px;font-family:monospace;"></code></p>
+          <div class="form-group">
+            <label>Ilova ko'rsatgan 6 raqamli kod</label>
+            <input id="2fa-code" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="text-align:center;font-size:20px;letter-spacing:6px;">
+          </div>
+          <button class="btn-primary" onclick="confirm2FA()">Tasdiqlash</button>
+        </div>
+        <div id="2fa-recovery" style="display:none;margin-top:14px;background:#fef3c7;border-radius:10px;padding:14px;">
+          <strong style="color:#92400e;">⚠ Recovery kodlarni xavfsiz saqlang:</strong>
+          <pre id="2fa-codes" style="font-family:monospace;font-size:13px;color:#0f172a;margin-top:8px;background:#fff;padding:10px;border-radius:6px;"></pre>
+          <small style="color:#92400e;">Telefoningizni yo'qotsangiz, recovery kodlar bilan kirasiz. Har biri faqat bir marta ishlatiladi.</small>
+        </div>
+      </div>
+
+      <!-- Parol o'zgartirish -->
+      <div class="card">
+        <h2>🔒 Parol o'zgartirish</h2>
+        <div class="alert alert-success" id="pass-ok">Parol o'zgartirildi!</div>
+        <div class="alert alert-error"   id="pass-err"></div>
+        <form id="pass-form">
+          <div class="form-group">
+            <label>Eski parol</label>
+            <input type="password" id="f-old-pass" placeholder="••••••••" required>
+          </div>
+          <div class="form-group">
+            <label>Yangi parol</label>
+            <input type="password" id="f-new-pass" placeholder="Kamida 6 belgi" required>
+          </div>
+          <div class="form-group">
+            <label>Yangi parol (takror)</label>
+            <input type="password" id="f-new-pass2" placeholder="Takrorlang" required>
+          </div>
+          <button type="submit" class="btn-primary">🔑 O'zgartirish</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- O'ng ustun -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Obuna -->
+      <div class="card">
+        <h2>💎 Obuna holati</h2>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="val" id="s-used">0</div><div class="lbl">Yaratilgan</div></div>
+          <div class="stat-item"><div class="val" id="s-limit">0</div><div class="lbl">Limit</div></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="s-bar" style="width:0%"></div></div>
+        <div class="sub-info" id="sub-info" style="margin-top:12px;"></div>
+        <a href="/plans.html" style="display:block;text-align:center;margin-top:16px;padding:12px;background:#f1f5f9;border-radius:10px;color:#6366f1;font-weight:700;text-decoration:none;">⬆ Tarif rejani yangilash</a>
+      </div>
+
+      <!-- Statistika -->
+      <div class="card">
+        <h2>📊 Faoliyat</h2>
+        <div class="stat-grid">
+          <div class="stat-item"><div class="val" id="s-total">0</div><div class="lbl">Jami sertifikat</div></div>
+          <div class="stat-item"><div class="val" id="s-views">0</div><div class="lbl">Jami ko'rishlar</div></div>
+        </div>
+        <div class="stat-grid" style="margin-top:0;">
+          <div class="stat-item"><div class="val" id="s-today">0</div><div class="lbl">Bugun</div></div>
+          <div class="stat-item"><div class="val" id="s-valid">0</div><div class="lbl">Faol</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Saqlangan konstruktor ishi</h2>
+        <p id="constructor-layout-status" style="font-size:13px;color:#64748b;margin-bottom:14px;">Tekshirilmoqda...</p>
+        <a href="/constructor.html?load_saved=1" class="btn-primary" style="display:block;text-align:center;text-decoration:none;">Konstruktorda ochish</a>
+      </div>
+
+      <!-- Xavfli zona -->
+      <div class="danger-zone">
+        <h3>⚠️ Xavfli zona</h3>
+        <p>Akkauntni o'chirish barcha sertifikatlar va ma'lumotlarni butunlay yo'q qiladi. Bu amalni qaytarib bo'lmaydi.</p>
+        <button class="btn-soft" onclick="exportData()" style="margin-bottom:8px;width:100%;padding:10px;">📥 Mening ma'lumotlarimni eksport qilish</button>
+        <button class="btn-danger" onclick="openDeleteModal()">🗑 Akkauntni o'chirish</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Delete account modal -->
+<div class="del-modal-overlay" id="del-modal">
+  <div class="del-modal">
+    <h3>⚠️ Hisobni butunlay o'chirish</h3>
+    <p>Bu amal qaytarib bo'lmaydi. Quyidagilar o'chiriladi:</p>
+    <div class="warn-list">
+      <ul>
+        <li>Profilingiz va sozlamalaringiz</li>
+        <li>Yaratilgan barcha sertifikatlar</li>
+        <li>QR kodlar, PDF/PNG fayllar</li>
+        <li>Obuna va to'lov tarixi</li>
+        <li>Avatar va logo rasmlari</li>
+      </ul>
+    </div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:8px;">Tasdiqlash uchun parolingizni kiriting:</p>
+    <input type="password" id="del-password" placeholder="Parol" style="width:100%;padding:11px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;margin-bottom:14px;">
+    <div class="del-modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Bekor qilish</button>
+      <button class="btn-confirm" id="del-btn" onclick="reallyDelete()">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Background Remover Modal -->
+<div class="del-modal-overlay" id="bg-remover-modal">
+  <div class="del-modal" style="max-width: 580px;">
+    <h3 style="color:#6366f1;font-size:20px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;">🪄 Rasm fonini tozalash</h3>
+    <p style="color:#475569;font-size:13px;line-height:1.5;margin-bottom:16px;">
+      Rasm orqasidagi bir xil rangdagi fonni (masalan oq rang) shaffof (transparent) qilish uchun ushbu vositadan foydalaning.
+    </p>
+    
+    <div style="background:#e2e8f0;background-image:linear-gradient(45deg,#cbd5e1 25%,transparent 25%),linear-gradient(-45deg,#cbd5e1 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#cbd5e1 75%),linear-gradient(-45deg,transparent 75%,#cbd5e1 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;border-radius:12px;overflow:hidden;margin-bottom:16px;display:flex;align-items:center;justify-content:center;height:240px;position:relative;border:2px solid #cbd5e1;">
+      <canvas id="remover-canvas" style="max-width:100%;max-height:100%;object-fit:contain;cursor:crosshair;"></canvas>
+      <div style="position:absolute;top:10px;right:10px;background:rgba(15,23,42,0.8);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;">Rasm ustiga bosib rang tanlang</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:16px;">
+      <div>
+        <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Tolerantlik (Sezgirlik)</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="range" id="remover-tolerance" min="0" max="150" value="30" style="flex:1;accent-color:#6366f1;" oninput="processBgRemover()">
+          <span id="remover-tolerance-val" style="font-family:monospace;font-size:13px;font-weight:700;width:30px;">30</span>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Tanlangan Rang</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="color" id="remover-color" value="#ffffff" style="width:40px;height:32px;border:none;border-radius:6px;cursor:pointer;" onchange="processBgRemover()">
+          <span id="remover-color-hex" style="font-family:monospace;font-size:13px;font-weight:700;">#FFFFFF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="del-modal-actions">
+      <button class="btn-cancel" onclick="closeBgRemover()">Bekor qilish</button>
+      <button class="btn-confirm" id="remover-save-btn" onclick="saveBgRemover()" style="background:#6366f1;">💾 Saqlash va yuklash</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  requireAuth();
+
+  let CURRENT_USER = null;
+
+  async function init() {
+    const { user, subscription } = await Api.auth.me();
+    CURRENT_USER = user;
+
+    renderAvatar(user);
+    renderLogo(user);
+    renderSignature(user);
+    renderSeal(user);
+
+    document.getElementById('header-name').textContent  = user.name;
+    document.getElementById('header-email').textContent = user.email || user.phone || '—';
+
+    const planNames = { free: 'Bepul', standard: 'Standart', pro: 'Pro' };
+    const plan = subscription?.plan || 'free';
+    document.getElementById('header-plan').textContent = '💎 ' + (planNames[plan] || plan) + ' tarif';
+
+    // Forma
+    document.getElementById('f-name').value    = user.name    || '';
+    document.getElementById('f-email').value   = user.email   || '';
+    document.getElementById('f-phone').value   = user.phone   || '';
+    document.getElementById('f-company').value = user.company || '';
+
+    // Obuna
+    if (subscription) {
+      const used  = subscription.cert_used  || 0;
+      const limit = subscription.cert_limit || 0;
+      const pct   = limit > 0 ? Math.min(100, Math.round(used / limit * 100)) : 0;
+      document.getElementById('s-used').textContent  = used;
+      document.getElementById('s-limit').textContent = limit >= 999999 ? '∞' : limit;
+      document.getElementById('s-bar').style.width   = pct + '%';
+
+      const expiry = subscription.expires_at
+        ? 'Muddati: <strong>' + fmt.date(subscription.expires_at) + '</strong>'
+        : 'Cheksiz';
+      document.getElementById('sub-info').innerHTML = `Tarif: <strong>${planNames[plan]}</strong> &nbsp;·&nbsp; ${expiry}`;
+    }
+
+    // Statistika
+    loadStats(user.id);
+    loadSavedConstructorInfo();
+  }
+
+  async function loadSavedConstructorInfo() {
+    const el = document.getElementById('constructor-layout-status');
+    try {
+      const saved = await Api.layout.loadLayout();
+      el.textContent = saved.updated_at ? 'Oxirgi saqlangan: ' + fmt.date(saved.updated_at) : 'Saqlangan ish mavjud';
+    } catch (_) {
+      el.textContent = 'Hozircha saqlangan konstruktor ishi yo\'q';
+    }
+  }
+
+  async function loadStats(userId) {
+    const res = await Api.request('GET', '/certificates?page=1&limit=1');
+    document.getElementById('s-total').textContent = res.total || 0;
+    // Umumiy ko'rishlar uchun alohida endpoint yo'q — dashboard dan olinadi
+    const res2 = await Api.request('GET', '/certificates?page=1&limit=100');
+    const certs = res2.items || [];
+    const views = certs.reduce((s, c) => s + (c.view_count || 0), 0);
+    const valid = certs.filter(c => c.is_valid).length;
+    document.getElementById('s-views').textContent = views;
+    document.getElementById('s-valid').textContent = valid;
+  }
+
+  // Profil yangilash
+  document.getElementById('profile-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    hide('profile-ok'); hide('profile-err');
+
+    try {
+      await Api.auth.profile({
+      name:    document.getElementById('f-name').value.trim(),
+      email:   document.getElementById('f-email').value.trim() || null,
+      phone:   document.getElementById('f-phone').value.trim() || null,
+      company: document.getElementById('f-company').value.trim() || null,
+      });
+      show('profile-ok');
+    } catch (e) {
+      document.getElementById('profile-err').textContent = e.message;
+      show('profile-err');
+    }
+  });
+
+  // Parol o'zgartirish
+  document.getElementById('pass-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    hide('pass-ok'); hide('pass-err');
+
+    const newPass  = document.getElementById('f-new-pass').value;
+    const newPass2 = document.getElementById('f-new-pass2').value;
+    if (newPass !== newPass2) {
+      document.getElementById('pass-err').textContent = 'Yangi parollar mos emas';
+      return show('pass-err');
+    }
+
+    try {
+      await Api.auth.password({
+      old_password: document.getElementById('f-old-pass').value,
+      new_password: newPass,
+      });
+      show('pass-ok');
+      document.getElementById('pass-form').reset();
+    } catch (e) {
+      document.getElementById('pass-err').textContent = e.message;
+      show('pass-err');
+    }
+  });
+
+  // ── Avatar ──
+  function renderAvatar(user) {
+    const el = document.getElementById('avatar-icon');
+    if (user.avatar) {
+      el.innerHTML = `<img src="/${user.avatar}?t=${Date.now()}" alt="">`;
+    } else {
+      el.textContent = user.name?.[0]?.toUpperCase() || '👤';
+    }
+  }
+
+  document.getElementById('avatar-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      window.Toast ? Toast.error('Fayl 2MB dan kichik bo\'lishi kerak') : alert('Fayl 2MB dan kichik bo\'lishi kerak');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('avatar', file);
+    try {
+      const r = await fetch('/api/auth/avatar', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.avatar = data.data.avatar;
+      renderAvatar(CURRENT_USER);
+      window.Toast?.success('Avatar yangilandi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  });
+
+  // ── Logo ──
+  function renderLogo(user) {
+    const el  = document.getElementById('logo-preview');
+    const btn = document.getElementById('logo-del-btn');
+    const cleanBtn = document.getElementById('logo-clean-btn');
+    if (user.logo_url) {
+      el.innerHTML = `<img src="/${user.logo_url}?t=${Date.now()}" alt="logo">`;
+      btn.style.display = 'block';
+      cleanBtn.style.display = 'block';
+    } else {
+      el.textContent = '🖼️';
+      btn.style.display = 'none';
+      cleanBtn.style.display = 'none';
+    }
+  }
+
+  document.getElementById('logo-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      window.Toast?.error('Fayl 2MB dan kichik bo\'lishi kerak');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('logo', file);
+    try {
+      const r = await fetch('/api/auth/logo', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.logo_url = data.data.logo_url;
+      renderLogo(CURRENT_USER);
+      window.Toast?.success('Logo yangilandi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  });
+
+  async function deleteLogo() {
+    if (!confirm('Logoni o\'chirishni tasdiqlaysizmi?')) return;
+    try {
+      const r = await fetch('/api/auth/logo', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.logo_url = null;
+      renderLogo(CURRENT_USER);
+      window.Toast?.success('Logo o\'chirildi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  }
+
+  // ── Signature ──
+  function renderSignature(user) {
+    const el  = document.getElementById('sig-preview');
+    const btn = document.getElementById('sig-del-btn');
+    const cleanBtn = document.getElementById('sig-clean-btn');
+    if (user.signature_url) {
+      el.innerHTML = `<img src="/${user.signature_url}?t=${Date.now()}" alt="signature">`;
+      btn.style.display = 'block';
+      cleanBtn.style.display = 'block';
+    } else {
+      el.textContent = '✍️';
+      btn.style.display = 'none';
+      cleanBtn.style.display = 'none';
+    }
+  }
+
+  document.getElementById('sig-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      window.Toast?.error('Fayl 2MB dan kichik bo\'lishi kerak');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('signature', file);
+    try {
+      const r = await fetch('/api/auth/signature', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.signature_url = data.data.signature_url;
+      renderSignature(CURRENT_USER);
+      window.Toast?.success('Rahbar imzosi yuklandi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  });
+
+  async function deleteSignature() {
+    if (!confirm('Imzoni o\'chirishni tasdiqlaysizmi?')) return;
+    try {
+      const r = await fetch('/api/auth/signature', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.signature_url = null;
+      renderSignature(CURRENT_USER);
+      window.Toast?.success('Imzo o\'chirildi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  }
+
+  // ── Seal ──
+  function renderSeal(user) {
+    const el  = document.getElementById('seal-preview');
+    const btn = document.getElementById('seal-del-btn');
+    const cleanBtn = document.getElementById('seal-clean-btn');
+    if (user.seal_url) {
+      el.innerHTML = `<img src="/${user.seal_url}?t=${Date.now()}" alt="seal">`;
+      btn.style.display = 'block';
+      cleanBtn.style.display = 'block';
+    } else {
+      el.textContent = '◎';
+      btn.style.display = 'none';
+      cleanBtn.style.display = 'none';
+    }
+  }
+
+  document.getElementById('seal-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      window.Toast?.error('Fayl 2MB dan kichik bo\'lishi kerak');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('seal', file);
+    try {
+      const r = await fetch('/api/auth/seal', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+        body: fd,
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.seal_url = data.data.seal_url;
+      renderSeal(CURRENT_USER);
+      window.Toast?.success('Muhr yuklandi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  });
+
+  async function deleteSeal() {
+    if (!confirm('Muhrni o\'chirishni tasdiqlaysizmi?')) return;
+    try {
+      const r = await fetch('/api/auth/seal', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+      CURRENT_USER.seal_url = null;
+      renderSeal(CURRENT_USER);
+      window.Toast?.success('Muhr o\'chirildi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  }
+
+  // ── Background Remover Logic ──
+  let removerImg = new Image();
+  let originalImgData = null;
+  let removerMode = 'logo'; // 'logo' | 'signature' | 'seal'
+
+  function openBgRemover(mode = 'logo') {
+    removerMode = mode;
+    let url = '';
+    if (mode === 'signature') {
+      url = CURRENT_USER.signature_url;
+    } else if (mode === 'seal') {
+      url = CURRENT_USER.seal_url;
+    } else {
+      url = CURRENT_USER.logo_url;
+    }
+    if (!url) return;
+    
+    const canvas = document.getElementById('remover-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    removerImg.crossOrigin = "anonymous";
+    removerImg.src = "/" + url + "?t=" + Date.now();
+    removerImg.onload = () => {
+      canvas.width = removerImg.naturalWidth;
+      canvas.height = removerImg.naturalHeight;
+      ctx.drawImage(removerImg, 0, 0);
+      
+      originalImgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      const data = originalImgData.data;
+      if (data.length >= 4) {
+        const r = data[0];
+        const g = data[1];
+        const b = data[2];
+        const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        document.getElementById('remover-color').value = hex;
+        document.getElementById('remover-color-hex').textContent = hex;
+      }
+      
+      document.getElementById('bg-remover-modal').classList.add('open');
+      processBgRemover();
+    };
+  }
+
+  function closeBgRemover() {
+    document.getElementById('bg-remover-modal').classList.remove('open');
+  }
+
+  document.getElementById('remover-canvas').addEventListener('click', e => {
+    const canvas = document.getElementById('remover-canvas');
+    const rect = canvas.getBoundingClientRect();
+    
+    const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+    const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+    
+    const ctx = canvas.getContext('2d');
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
+    
+    const hex = "#" + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1).toUpperCase();
+    document.getElementById('remover-color').value = hex;
+    document.getElementById('remover-color-hex').textContent = hex;
+    processBgRemover();
+  });
+
+  function processBgRemover() {
+    if (!originalImgData) return;
+    
+    const canvas = document.getElementById('remover-canvas');
+    const ctx = canvas.getContext('2d');
+    const tolerance = parseInt(document.getElementById('remover-tolerance').value, 10);
+    document.getElementById('remover-tolerance-val').textContent = tolerance;
+    
+    const colorHex = document.getElementById('remover-color').value;
+    document.getElementById('remover-color-hex').textContent = colorHex.toUpperCase();
+    
+    const rTarget = parseInt(colorHex.slice(1, 3), 16);
+    const gTarget = parseInt(colorHex.slice(3, 5), 16);
+    const bTarget = parseInt(colorHex.slice(5, 7), 16);
+    
+    const imgData = ctx.createImageData(originalImgData);
+    const srcData = originalImgData.data;
+    const destData = imgData.data;
+    
+    for (let i = 0; i < srcData.length; i += 4) {
+      const r = srcData[i];
+      const g = srcData[i+1];
+      const b = srcData[i+2];
+      const a = srcData[i+3];
+      
+      const dist = Math.sqrt(
+        Math.pow(r - rTarget, 2) +
+        Math.pow(g - gTarget, 2) +
+        Math.pow(b - bTarget, 2)
+      );
+      
+      destData[i]   = r;
+      destData[i+1] = g;
+      destData[i+2] = b;
+      
+      if (dist <= tolerance) {
+        destData[i+3] = 0;
+      } else {
+        destData[i+3] = a;
+      }
+    }
+    
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  async function saveBgRemover() {
+    const canvas = document.getElementById('remover-canvas');
+    const btn = document.getElementById('remover-save-btn');
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Saqlanmoqda...';
+    
+    canvas.toBlob(async blob => {
+      if (!blob) {
+        window.Toast?.error("Rasm toBlob xatosi");
+        btn.disabled = false;
+        btn.textContent = 'Saqlash va yuklash';
+        return;
+      }
+      
+      let apiPath = '/api/auth/logo';
+      let fileFieldName = 'logo';
+      let fileName = 'logo_transparent.png';
+      
+      if (removerMode === 'signature') {
+        apiPath = '/api/auth/signature';
+        fileFieldName = 'signature';
+        fileName = 'signature_transparent.png';
+      } else if (removerMode === 'seal') {
+        apiPath = '/api/auth/seal';
+        fileFieldName = 'seal';
+        fileName = 'seal_transparent.png';
+      }
+      
+      const file = new File([blob], fileName, { type: "image/png" });
+      const fd = new FormData();
+      fd.append(fileFieldName, file);
+      
+      try {
+        const r = await fetch(apiPath, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+          body: fd,
+        });
+        const data = await r.json();
+        if (!data.success) throw new Error(data.message || 'Xato');
+        
+        if (removerMode === 'signature') {
+          CURRENT_USER.signature_url = data.data.signature_url;
+          renderSignature(CURRENT_USER);
+          window.Toast?.success('Imzo fondan tozalandi va yuklandi!');
+        } else if (removerMode === 'seal') {
+          CURRENT_USER.seal_url = data.data.seal_url;
+          renderSeal(CURRENT_USER);
+          window.Toast?.success('Muhr fondan tozalandi va yuklandi!');
+        } else {
+          CURRENT_USER.logo_url = data.data.logo_url;
+          renderLogo(CURRENT_USER);
+          window.Toast?.success('Logo fondan tozalandi va yuklandi!');
+        }
+        closeBgRemover();
+      } catch (err) {
+        window.Toast?.error(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Saqlash va yuklash';
+      }
+    }, "image/png");
+  }
+
+  // ── 2FA ──
+  async function load2FAStatus() {
+    try {
+      const d = await Api.get('/auth/2fa/status');
+      const status = document.getElementById('2fa-status');
+      const btn    = document.getElementById('2fa-btn');
+      if (d.enabled) {
+        status.innerHTML = `✅ <strong style="color:#15803d;">Yoqilgan</strong> · Recovery kodlar qolgan: ${d.recovery_remaining}`;
+        btn.textContent  = "O'chirish";
+        btn.style.background = '#ef4444';
+      } else {
+        status.innerHTML = '⚠️ <strong>O\'chirilgan</strong> — hisobingiz himoyasi past';
+        btn.textContent  = '🔐 Yoqish';
+        btn.style.background = '#6366f1';
+      }
+      btn.style.display = 'inline-block';
+      btn.dataset.enabled = d.enabled;
+    } catch (e) {
+      document.getElementById('2fa-status').textContent = 'Status olinmadi';
+    }
+  }
+
+  async function toggle2FA() {
+    const btn = document.getElementById('2fa-btn');
+    if (btn.dataset.enabled === 'true') {
+      const pw = prompt('Tasdiqlash uchun parolingizni kiriting:');
+      if (!pw) return;
+      try {
+        await Api.post('/auth/2fa/disable', { password: pw });
+        window.Toast?.success("2FA o'chirildi");
+        load2FAStatus();
+        document.getElementById('2fa-setup').style.display = 'none';
+        document.getElementById('2fa-recovery').style.display = 'none';
+      } catch (e) {
+        window.Toast?.error(e.message);
+      }
+    } else {
+      try {
+        const d = await Api.post('/auth/2fa/setup', {});
+        const qr = document.getElementById('2fa-qr');
+        if (d.qr_url) {
+          qr.src = d.qr_url;
+          qr.style.display = 'block';
+        } else {
+          qr.removeAttribute('src');
+          qr.style.display = 'none';
+        }
+        document.getElementById('2fa-secret').textContent = d.secret;
+        document.getElementById('2fa-setup').style.display = 'block';
+      } catch (e) {
+        window.Toast?.error(e.message);
+      }
+    }
+  }
+
+  async function confirm2FA() {
+    const code = document.getElementById('2fa-code').value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      window.Toast?.error('6 raqamli kod kiriting');
+      return;
+    }
+    try {
+      const d = await Api.post('/auth/2fa/confirm', { code });
+      document.getElementById('2fa-codes').textContent = d.recovery_codes.join('\n');
+      document.getElementById('2fa-recovery').style.display = 'block';
+      document.getElementById('2fa-setup').style.display    = 'none';
+      window.Toast?.success('2FA yoqildi!');
+      load2FAStatus();
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  load2FAStatus();
+
+  // ── Eksport ──
+  async function exportData() {
+    try {
+      const r = await fetch('/api/auth/export', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
+      });
+      const data = await r.json();
+      const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sertifikat-data-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      window.Toast?.success('Ma\'lumotlar yuklab olindi');
+    } catch (err) {
+      window.Toast?.error('Eksport xatosi: ' + err.message);
+    }
+  }
+
+  // ── Account deletion ──
+  function openDeleteModal() {
+    document.getElementById('del-modal').classList.add('open');
+    document.getElementById('del-password').value = '';
+    setTimeout(() => document.getElementById('del-password').focus(), 100);
+  }
+  function closeDeleteModal() {
+    document.getElementById('del-modal').classList.remove('open');
+  }
+
+  async function reallyDelete() {
+    const pw = document.getElementById('del-password').value;
+    if (!pw) {
+      window.Toast?.error('Parol kiriting');
+      return;
+    }
+    const btn = document.getElementById('del-btn');
+    btn.disabled = true;
+    btn.textContent = 'O\'chirilmoqda...';
+
+    try {
+      const r = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: pw }),
+      });
+      const data = await r.json();
+      if (!data.success) throw new Error(data.message || 'Xato');
+
+      localStorage.removeItem('token');
+      window.Toast?.success('Hisobingiz o\'chirildi');
+      setTimeout(() => location.href = '/', 1500);
+    } catch (err) {
+      window.Toast?.error(err.message);
+      btn.disabled = false;
+      btn.textContent = 'O\'chirish';
+    }
+  }
+
+  // Modal tashqarisidan bosish yopadi
+  document.getElementById('del-modal').addEventListener('click', e => {
+    if (e.target.id === 'del-modal') closeDeleteModal();
+  });
+
+  function show(id) { document.getElementById(id).style.display = 'block'; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+  init();
+</script>
+  </main>
+</div>
+<script src="/js/toast.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/dashboard-sidebar.js"></script>
+<script src="/js/bottom-nav.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

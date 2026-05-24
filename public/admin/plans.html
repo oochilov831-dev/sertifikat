@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarif sozlamalari - Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+    }
+
+    .plans-admin-list {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      margin-top: 20px;
+    }
+
+    /* --- Premium Satin & Glass Plan Editor Card --- */
+    .plan-editor-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+    }
+    .plan-editor-card:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    /* --- Accent Indicators --- */
+    .plan-editor-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+    }
+    .plan-editor-card.emerald-accent::before { background: linear-gradient(180deg, #10b981 0%, #059669 100%); }
+    .plan-editor-card.indigo-accent::before  { background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%); }
+    .plan-editor-card.gold-accent::before    { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+
+    .plan-editor-card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .plan-pill {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .plan-pill.free { background: rgba(16, 185, 129, 0.1); color: #059669; }
+    .plan-pill.standard { background: rgba(99, 102, 241, 0.1); color: #4f46e5; }
+    .plan-pill.pro { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+
+    /* --- Forms & Inputs --- */
+    .form-row {
+      margin-bottom: 18px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
+    }
+    .form-row input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #1e293b;
+      font-weight: 600;
+      background: #f8fafc;
+      transition: all 0.2s;
+    }
+    .form-row input:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    .form-row input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #f1f5f9;
+    }
+
+    .price-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .price-input-wrapper input {
+      padding-right: 60px;
+    }
+    .price-input-wrapper .currency-tag {
+      position: absolute;
+      right: 14px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #94a3b8;
+    }
+
+    /* --- Cheksiz Toggle --- */
+    .cheksiz-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .cheksiz-toggle input {
+      width: 16px;
+      height: 16px;
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+
+    /* --- Toggle Row Custom Switch --- */
+    .toggle-group-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 6px 16px;
+      margin-bottom: 20px;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+    .toggle-row strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+    }
+    .toggle-row p {
+      font-size: 11px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    /* --- iOS Styled Switch --- */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .25s var(--ease);
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s var(--ease);
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    input:checked + .slider {
+      background-color: #6366f1;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    input:disabled + .slider {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* --- Live Preview Column --- */
+    .preview-column {
+      border-left: 1px dashed #cbd5e1;
+      padding-left: 36px;
+      display: flex;
+      flex-direction: column;
+    }
+    @media(max-width: 1024px) {
+      .preview-column {
+        border-left: none;
+        border-top: 1px dashed #cbd5e1;
+        padding-left: 0;
+        padding-top: 30px;
+      }
+    }
+    .preview-header-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    /* --- Live User View Card --- */
+    .preview-card {
+      border-radius: 16px;
+      padding: 28px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      transition: all 0.3s;
+      flex: 1;
+    }
+    .preview-card.popular {
+      border-color: #6366f1;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.08);
+    }
+    .preview-card .badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+    }
+    .preview-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+    .preview-price {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .preview-price span {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .preview-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+    .preview-features li {
+      font-size: 13px;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+    .preview-features li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .preview-features li.disabled-feature::before {
+      content: "✕";
+      background: rgba(239, 68, 68, 0.08);
+      color: #ef4444;
+    }
+    .preview-features li.disabled-feature {
+      color: #94a3b8;
+      text-decoration: line-through;
+      text-decoration-color: rgba(0,0,0,0.06);
+    }
+
+    .hint {
+      background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+      color: #3730a3;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 13px;
+      margin-bottom: 28px;
+      border: 1px solid rgba(99, 102, 241, 0.15);
+      line-height: 1.6;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">🛡️ Admin Panel</a>
+  <div class="nav-links">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:12px;" id="admin-name"></span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h1 style="font-size:24px; font-weight:800; font-family:'Outfit',sans-serif; color:#0f172a;">Tarif rejalar sozlamalari</h1>
+    </div>
+
+    <div class="hint">
+      💡 Bu yerda kiritilgan sozlamalar va narxlar foydalanuvchilarning tarif sahifasida hamda yangi to'lov arizalarida darhol ishlatiladi. Bepul tarif narxi har doim 0 bo'lib qoladi, ammo limitsiz sertifikatlar berish imkoni va boshqa barcha funksiyalar to'liq sozlanadi.
+    </div>
+
+    <div class="plans-admin-list" id="plans-grid">
+      <div style="text-align:center; padding:60px;"><div class="spinner" style="margin:auto;"></div></div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js?v=2.0"></script>
+<script>
+  requireAuth();
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!['admin', 'super_admin'].includes(currentUser.role)) location.href = '/dashboard.html';
+  document.getElementById('admin-name').textContent = currentUser.name || '';
+
+  const labels = { free: 'Bepul', standard: 'Standart', pro: 'Pro' };
+
+  async function loadPlans() {
+    try {
+      const plans = await Api.admin.plans();
+      document.getElementById('plans-grid').innerHTML = Object.entries(plans).map(([key, plan]) => renderPlan(key, plan)).join('');
+    } catch (e) {
+      document.getElementById('plans-grid').innerHTML =
+        `<div class="plan-editor-card" style="color:#b91c1c; text-align:center;">${esc(e.message || 'Tariflar yuklanmadi')}</div>`;
+    }
+  }
+
+  function renderPlan(key, plan) {
+    const paid = key !== 'free';
+    const accentClass = key === 'pro' ? 'gold-accent' : key === 'standard' ? 'indigo-accent' : 'emerald-accent';
+    return `
+      <div class="plan-editor-card ${accentClass}">
+        <form onsubmit="savePlan(event, '${key}')" id="${key}-form">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <h2>${labels[key] || key} Tarifi</h2>
+            <span class="plan-pill ${key}">${key.toUpperCase()}</span>
+          </div>
+          
+          <div class="form-row">
+            <label>Tarif Nomi</label>
+            <input id="${key}-name" value="${esc(plan.name)}" required oninput="updatePreview('${key}')">
+          </div>
+          
+          <div class="form-row">
+            <label>Narxi (so'm / oy)</label>
+            <div class="price-input-wrapper">
+              <input id="${key}-price" type="number" min="0" step="1000" value="${plan.price}" ${paid ? '' : 'disabled'} oninput="updatePreview('${key}')">
+              <span class="currency-tag">UZS</span>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <label>Sertifikat Limiti</label>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <input id="${key}-limit" type="number" min="-1" step="1" value="${plan.limit}" style="flex:1;" oninput="updatePreview('${key}')" ${plan.limit === -1 ? 'disabled style="background:#f1f5f9; cursor:not-allowed;"' : ''}>
+              <label class="cheksiz-toggle">
+                <input type="checkbox" id="${key}-unlimited" ${plan.limit === -1 ? 'checked' : ''} onchange="toggleUnlimited('${key}')">
+                <span>Cheksiz limit</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Tartib raqami (Sort Order)</label>
+            <input id="${key}-sort-order" type="number" min="0" value="${plan.sort_order || 0}" oninput="updatePreview('${key}')">
+          </div>
+          
+          <div class="toggle-group-box">
+            <div class="toggle-row">
+              <div>
+                <strong>Suv belgisi (Watermark)</strong>
+                <p>Sertifikatlarda brand suv belgisini ko'rsatish</p>
+              </div>
+              <label class="switch">
+                <input id="${key}-watermark" type="checkbox" ${plan.watermark ? 'checked' : ''} onchange="updatePreview('${key}')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="toggle-row">
+              <div>
+                <strong>O'z shablonini yuklash</strong>
+                <p>Foydalanuvchiga shaxsiy shablonlar yuklash ruxsati</p>
+              </div>
+              <label class="switch">
+                <input id="${key}-custom" type="checkbox" ${plan.custom_template ? 'checked' : ''} onchange="updatePreview('${key}')">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="toggle-row">
+              <div>
+                <strong>Tarif rejasi faol</strong>
+                <p>Ushbu tarifni foydalanuvchilarga ko'rsatish</p>
+              </div>
+              <label class="switch">
+                <input id="${key}-active" type="checkbox" ${plan.is_active ? 'checked' : ''} ${paid ? '' : 'disabled'} onchange="updatePreview('${key}')">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" id="${key}-btn" style="margin-top:20px; border-radius:12px; height:44px; font-weight:700;" type="submit">
+            💾 Sozlamalarni Saqlash
+          </button>
+        </form>
+        
+        <!-- User View Live Preview -->
+        <div class="preview-column">
+          <div class="preview-header-tag">Foydalanuvchiga ko'rinishi (Live Preview)</div>
+          <div class="preview-card ${key === 'standard' ? 'popular' : ''}" id="${key}-preview-card">
+            ${key === 'standard' ? '<div class="badge">Tavsiya etiladi</div>' : ''}
+            <h3 class="preview-title" id="${key}-p-title">${esc(plan.name)}</h3>
+            <div class="preview-price" id="${key}-p-price">
+              ${plan.price === 0 ? 'Bepul' : fmt.money(plan.price)}
+              ${plan.price > 0 ? '<span>/ oy</span>' : ''}
+            </div>
+            <ul class="preview-features">
+              <li id="${key}-p-feat-limit">${plan.limit === -1 ? 'Cheksiz sertifikat' : plan.limit + ' ta sertifikat/oy'}</li>
+              <li id="${key}-p-feat-watermark" class="${plan.watermark ? '' : 'disabled-feature'}">${plan.watermark ? 'Suv belgisi (watermark)' : 'Watermarksiz (Brendsiz)'}</li>
+              <li id="${key}-p-feat-custom" class="${plan.custom_template ? '' : 'disabled-feature'}">${plan.custom_template ? 'O\'z shabloningiz' : 'Standart shablonlar'}</li>
+              <li class="${key === 'free' ? 'disabled-feature' : ''}">Ommaviy generatsiya (CSV)</li>
+              <li class="${key === 'pro' ? '' : 'disabled-feature'}">QR tekshiruv tizimi</li>
+            </ul>
+            <button class="btn ${key === 'free' ? 'btn-outline' : 'btn-primary'} btn-full" disabled style="opacity:0.9; cursor:default; border-radius:10px;">
+              ${key === 'free' ? 'Tanlash' : 'Obuna bo\'lish'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function toggleUnlimited(key) {
+    const isUnlimited = document.getElementById(`${key}-unlimited`).checked;
+    const limitInput = document.getElementById(`${key}-limit`);
+    if (isUnlimited) {
+      limitInput.value = -1;
+      limitInput.disabled = true;
+      limitInput.style.background = '#f1f5f9';
+      limitInput.style.cursor = 'not-allowed';
+    } else {
+      limitInput.value = 100;
+      limitInput.disabled = false;
+      limitInput.style.background = '#f8fafc';
+      limitInput.style.cursor = 'auto';
+    }
+    updatePreview(key);
+  }
+
+  function updatePreview(key) {
+    const name = document.getElementById(`${key}-name`).value.trim() || 'Tarif';
+    const price = key === 'free' ? 0 : Number(document.getElementById(`${key}-price`).value || 0);
+    const limit = Number(document.getElementById(`${key}-limit`).value || 0);
+    const watermark = document.getElementById(`${key}-watermark`).checked;
+    const custom = document.getElementById(`${key}-custom`).checked;
+    const is_active = key === 'free' ? true : document.getElementById(`${key}-active`).checked;
+
+    // Update Live Preview fields
+    document.getElementById(`${key}-p-title`).textContent = name;
+    
+    // Price
+    const priceEl = document.getElementById(`${key}-p-price`);
+    if (price === 0) {
+      priceEl.innerHTML = 'Bepul';
+    } else {
+      priceEl.innerHTML = fmt.money(price) + ' <span>/ oy</span>';
+    }
+
+    // Limit
+    const limitEl = document.getElementById(`${key}-p-feat-limit`);
+    if (limit === -1) {
+      limitEl.textContent = 'Cheksiz sertifikat';
+      limitEl.classList.remove('disabled-feature');
+    } else {
+      limitEl.textContent = limit + ' ta sertifikat/oy';
+      limitEl.classList.remove('disabled-feature');
+    }
+
+    // Watermark
+    const wmEl = document.getElementById(`${key}-p-feat-watermark`);
+    wmEl.textContent = watermark ? 'Suv belgisi (watermark)' : 'Watermarksiz (Brendsiz)';
+    if (watermark) {
+      wmEl.classList.remove('disabled-feature');
+    } else {
+      wmEl.classList.add('disabled-feature');
+    }
+
+    // Custom template
+    const custEl = document.getElementById(`${key}-p-feat-custom`);
+    custEl.textContent = custom ? 'O\'z shabloningiz' : 'Standart shablonlar';
+    if (custom) {
+      custEl.classList.remove('disabled-feature');
+    } else {
+      custEl.classList.add('disabled-feature');
+    }
+
+    // Visual card state based on is_active
+    const previewCard = document.getElementById(`${key}-preview-card`);
+    if (!is_active) {
+      previewCard.style.opacity = '0.4';
+    } else {
+      previewCard.style.opacity = '1';
+    }
+  }
+
+  async function savePlan(e, key) {
+    e.preventDefault();
+    const btn = document.getElementById(`${key}-btn`);
+    const oldText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⌛ Saqlanmoqda...';
+
+    const data = {
+      name: document.getElementById(`${key}-name`).value.trim(),
+      price: Number(document.getElementById(`${key}-price`).value || 0),
+      limit: Number(document.getElementById(`${key}-limit`).value || 0),
+      sort_order: Number(document.getElementById(`${key}-sort-order`).value || 0),
+      watermark: document.getElementById(`${key}-watermark`).checked,
+      custom_template: document.getElementById(`${key}-custom`).checked,
+      is_active: document.getElementById(`${key}-active`).checked,
+    };
+
+    try {
+      await Api.admin.updatePlan(key, data);
+      toast('Tarif sozlamalari saqlandi');
+      await loadPlans();
+    } catch (err) {
+      toast(err.message || 'Tarifni saqlashda xato', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+    }
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  loadPlans();
+</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+</body>
+</html>

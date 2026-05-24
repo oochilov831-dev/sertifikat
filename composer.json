@@ -1,0 +1,22 @@
+{
+  "name": "sertifikat/tizimi",
+  "description": "Professional sertifikat berish tizimi",
+  "type": "project",
+  "require": {
+    "php": ">=8.1",
+    "tecnickcom/tcpdf": "^6.6",
+    "phpqrcode/phpqrcode": "dev-master#24094696f394d0579616b7614321958f6d53639c"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "scripts": {
+    "start": "php -S 0.0.0.0:8000 -t public"
+  },
+  "config": {
+    "optimize-autoloader": true
+  },
+  "minimum-stability": "dev"
+}

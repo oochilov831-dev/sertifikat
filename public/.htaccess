@@ -1,0 +1,10 @@
+Options -Indexes
+RewriteEngine On
+
+# Statik fayllarni to'g'ridan-to'g'ri xizmat qilish
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Barcha so'rovlarni index.php ga yo'naltirish
+RewriteRule ^ index.php [L]

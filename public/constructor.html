@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sertifikat Konstruktori — Premium Editor</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #090d16;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* --- Scrollbars --- */
+    .left-panel::-webkit-scrollbar,
+    .right-panel::-webkit-scrollbar,
+    .panel-body::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .left-panel::-webkit-scrollbar-track,
+    .right-panel::-webkit-scrollbar-track,
+    .panel-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .left-panel::-webkit-scrollbar-thumb,
+    .right-panel::-webkit-scrollbar-thumb,
+    .panel-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+    .left-panel::-webkit-scrollbar-thumb:hover,
+    .right-panel::-webkit-scrollbar-thumb:hover,
+    .panel-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* --- Figma-Style Topbar (3-Column Layout) --- */
+    .topbar {
+      min-height: 64px;
+      background: rgba(13, 18, 30, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      gap: 16px;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-left .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      color: #fff;
+      font-size: 20px;
+      text-decoration: none;
+      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25);
+      transition: transform 0.2s;
+    }
+    .topbar-left .logo:hover {
+      transform: scale(1.05);
+    }
+    .topbar-left h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .topbar-left .sub-label {
+      font-size: 10px;
+      color: #06b6d4;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-top: 1px;
+    }
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      flex-grow: 1;
+      min-width: 0;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    .toolbar-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    /* --- Unified Pill Control Groups --- */
+    .control-group {
+      display: inline-flex;
+      background: rgba(17, 23, 41, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      align-items: center;
+    }
+    .control-group .tbtn {
+      height: 32px;
+      padding: 0 10px;
+      font-size: 11px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      min-height: auto;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .control-group .tbtn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .control-group .tbtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      align-self: center;
+    }
+    .zoom-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: #e2e8f0;
+      padding: 0 4px;
+      align-self: center;
+      min-width: 36px;
+      text-align: center;
+    }
+    .snap-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      user-select: none;
+      padding: 0 8px;
+    }
+    .snap-label input {
+      accent-color: #6366f1;
+      width: 12px;
+      height: 12px;
+      cursor: pointer;
+    }
+
+    /* --- Premium Buttons --- */
+    .tbtn {
+      min-height: 38px;
+      padding: 0 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .tbtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .tbtn-outline {
+      background: rgba(255, 255, 255, 0.03);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tbtn-outline:hover {
+      border-color: #6366f1;
+      color: #ffffff;
+      background: rgba(99, 102, 241, 0.08);
+      transform: translateY(-1px);
+    }
+    .tbtn-primary {
+      background: #4f46e5;
+      color: #fff;
+    }
+    .tbtn-primary:hover {
+      background: #3730a3;
+      transform: translateY(-1px);
+    }
+    .tbtn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    }
+    .tbtn-success:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+    .tbtn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .tbtn-danger:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+    .btn-full {
+      width: 100%;
+    }
+
+    /* --- Workspace Layout --- */
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      background: #07090e;
+    }
+
+    /* --- Left Panel (Figma Dark Satin style) --- */
+    .left-panel {
+      width: 280px;
+      background: #0d121f;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .panel-tabs {
+      display: flex;
+      background: rgba(8, 12, 23, 0.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 6px;
+      gap: 4px;
+    }
+    .ptab {
+      flex: 1;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-radius: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .ptab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .ptab.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Templates Grid */
+    .tpl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .tpl-item {
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      background: #111726;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .tpl-item:hover {
+      border-color: #6366f1;
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2);
+    }
+    .tpl-item.selected {
+      border-color: #06b6d4;
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.35);
+    }
+    .tpl-item img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      background: #090d16;
+      transition: filter 0.2s;
+    }
+    .tpl-item:hover img {
+      filter: brightness(1.05);
+    }
+    .tpl-item .tpl-name {
+      font-size: 11px;
+      padding: 8px;
+      color: #94a3b8;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .tpl-none {
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+      min-height: 80px;
+      border-radius: 12px;
+      cursor: pointer;
+      grid-column: 1 / -1;
+      transition: all 0.2s;
+      gap: 6px;
+    }
+    .tpl-none:hover {
+      border-color: #6366f1;
+      color: #cbd5e1;
+      background: rgba(99, 102, 241, 0.03);
+    }
+
+    /* Canva-style Tools Grid */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tool-add-card {
+      background: #111625;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 12px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-align: center;
+      user-select: none;
+      outline: none;
+      font-family: inherit;
+      color: #e2e8f0;
+    }
+    .tool-add-card:hover {
+      border-color: #6366f1;
+      background: linear-gradient(180deg, #111625 0%, rgba(99, 102, 241, 0.05) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(99, 102, 241, 0.1);
+    }
+    .tool-add-card:active {
+      transform: translateY(0);
+    }
+    .tool-add-card .tc-icon {
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      color: #818cf8;
+      transition: all 0.2s;
+    }
+    .tool-add-card:hover .tc-icon {
+      background: #6366f1;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);
+    }
+    .tool-add-card .tc-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* Layers section */
+    .layers-section {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 16px;
+      padding-top: 16px;
+    }
+    .layers-section h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 12px;
+    }
+
+    /* Fields List & Chips */
+    .field-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-chip {
+      background: #111625;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .field-chip:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .field-chip.active {
+      border-color: #6366f1;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.03) 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .field-chip .fc-icon {
+      font-size: 14px;
+      color: #818cf8;
+      background: rgba(255, 255, 255, 0.03);
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .field-chip.active .fc-icon {
+      background: #6366f1;
+      color: #fff;
+    }
+    .field-chip .fc-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .field-chip .fc-del {
+      font-size: 11px;
+      color: #475569;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 5px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .field-chip .fc-del:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* --- Properties Right Panel --- */
+    .right-panel {
+      display: none;
+      width: 280px;
+      background: #0d121f;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 20px 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .right-panel h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 8px;
+    }
+    .prop-panel-group {
+      background: rgba(17, 22, 37, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .ppg-header {
+      background: rgba(17, 22, 37, 0.8);
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      font-family: 'Outfit', sans-serif;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .ppg-body {
+      padding: 12px 14px;
+    }
+    .prop-group {
+      margin-bottom: 14px;
+    }
+    .prop-group:last-child {
+      margin-bottom: 0;
+    }
+    .prop-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .prop-input {
+      width: 100%;
+      padding: 9px 12px;
+      background: #111726;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .prop-input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    .prop-row {
+      display: flex;
+      gap: 8px;
+    }
+    .prop-row-input {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .prop-unit {
+      position: absolute;
+      right: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      pointer-events: none;
+    }
+    .prop-color {
+      width: 44px;
+      height: 38px;
+      padding: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: #111726;
+      cursor: pointer;
+    }
+    .prop-select {
+      width: 100%;
+      padding: 9px 12px;
+      background: #111726;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .prop-select:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+    .prop-btn-sm {
+      min-height: auto;
+      height: 32px;
+      font-size: 11px;
+      padding: 0 10px;
+      border-radius: 6px;
+    }
+    .gap-6 {
+      gap: 6px;
+    }
+    .flex-1 {
+      flex: 1;
+    }
+    .align-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .align-btn {
+      flex: 1;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #111726;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .align-btn svg {
+      transition: stroke 0.2s;
+    }
+    .align-btn:hover, .align-btn.active {
+      border-color: #6366f1;
+      color: #ffffff;
+      background: #1e1b4b;
+    }
+    .no-selection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 40px 10px;
+    }
+    .empty-state-card {
+      position: relative;
+      background: #111625;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      max-width: 240px;
+      transition: all 0.3s;
+    }
+    .empty-state-card:hover {
+      border-color: #6366f1;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.08);
+    }
+    .esc-glow {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .esc-icon {
+      font-size: 32px;
+      animation: floatAnim 4s ease-in-out infinite;
+    }
+    @keyframes floatAnim {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .esc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      font-family: 'Outfit', sans-serif;
+    }
+    .esc-desc {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* --- Editor Canvas Area (high quality editor grid) --- */
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      padding: 40px;
+      background: radial-gradient(#1e293b 1px, transparent 1px), #080b11;
+      background-size: 20px 20px;
+      position: relative;
+    }
+    .canvas-wrap {
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(99, 102, 241, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .canvas-wrap:hover {
+      box-shadow: 0 20px 70px rgba(99, 102, 241, 0.2), 0 0 0 2px rgba(99, 102, 241, 0.3);
+    }
+    #cert-canvas {
+      display: block;
+      background: #fff;
+    }
+    .field-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    
+    /* Drag Boundaries & Bounding Box */
+    .drag-handle {
+      position: absolute;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      cursor: move;
+      pointer-events: all;
+      background: transparent;
+      transition: border-color 0.15s ease;
+    }
+    .drag-handle:hover {
+      border-color: #6366f1;
+    }
+    .drag-handle.selected {
+      border: 2px solid #818cf8;
+      background: rgba(99, 102, 241, 0.02);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+    }
+    
+    /* Circular Resize Nodes */
+    .drag-handle .corner-node {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      background: #ffffff;
+      border: 1.5px solid #818cf8;
+      border-radius: 50%;
+      pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .drag-handle .node-tl { top: -4.5px; left: -4.5px; }
+    .drag-handle .node-tr { top: -4.5px; right: -4.5px; }
+    .drag-handle .node-bl { bottom: -4.5px; left: -4.5px; }
+    .drag-handle .node-br { bottom: -4.5px; right: -4.5px; }
+    
+    .drag-handle .resize-br {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      width: 12px;
+      height: 12px;
+      background: transparent;
+      cursor: se-resize;
+      z-index: 10;
+    }
+    
+    /* Floating Layer Badge */
+    .drag-handle .layer-badge {
+      position: absolute;
+      top: -22px;
+      left: -2px;
+      background: #818cf8;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      letter-spacing: 0.01em;
+      z-index: 5;
+    }
+
+    /* Hotkeys floating guide */
+    .hotkeys-guide {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(13, 18, 30, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #94a3b8;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+    .hotkeys-guide .hk-title {
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-right: 4px;
+    }
+    .hotkeys-guide .hk-tag {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* --- Form controls --- */
+    .form-row { margin-bottom: 16px; }
+    .form-row label {
+      display: block;
+      font-size: 11px;
+      color: #64748b;
+      margin-bottom: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .form-row input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #111726;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .form-row input:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+
+    .create-status {
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    /* --- Toasts --- */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      max-width: 400px;
+      background: #0d121f;
+      color: #f1f5f9;
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast.success { border-left: 4px solid #10b981; }
+    .toast.error   { border-left: 4px solid #ef4444; }
+  </style>
+</head>
+<body>
+
+<!-- Figma-Style Top Header -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/dashboard.html" class="logo" title="Kabinetga qaytish">🎓</a>
+    <div>
+      <h1>Sertifikat Studiyasi</h1>
+    </div>
+  </div>
+  
+  <div class="topbar-center">
+    <div class="control-group">
+      <button class="tbtn" onclick="undoLayout()" title="Orqaga (Undo) - Ctrl+Z">↩️</button>
+      <button class="tbtn" onclick="redoLayout()" title="Oldinga (Redo) - Ctrl+Y">↪️</button>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="control-group">
+      <button class="tbtn" onclick="changeScale(-0.1)" title="Zoom out (−)">−</button>
+      <span class="zoom-text" id="scale-label">50%</span>
+      <button class="tbtn" onclick="changeScale(+0.1)" title="Zoom in (+)">+</button>
+      <button class="tbtn" onclick="fitToScreen()" title="Ekran bo'yicha (Fit)">Fit</button>
+      <button class="tbtn" onclick="setScale(1)" title="Haqiqiy o'lcham (100%)">100%</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="control-group">
+      <button class="tbtn" id="orient-btn" onclick="toggleOrientation()" title="Yo'nalish almashtirish">▬ Landscape</button>
+      <label class="snap-label" title="Maydonlarni to'rga taqash">
+        <input type="checkbox" id="snap-toggle" checked> Snap
+      </label>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="toolbar-row" style="gap:8px;">
+      <button class="tbtn tbtn-outline" onclick="saveLayout()" title="Hozirgi maydonlar joylashuvini saqlash">💾 Saqlash</button>
+      <button class="tbtn tbtn-outline" onclick="loadLayout()" title="Oxirgi saqlangan joylashuvni yuklash">📂 Yuklash</button>
+      <span class="create-status" id="create-status"></span>
+      <button class="tbtn tbtn-success" id="generate-btn" onclick="generateCert()" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); border:none; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);">⚡ Yaratish</button>
+    </div>
+  </div>
+</div>
+
+<div class="workspace">
+  <!-- Chap panel -->
+  <div class="left-panel">
+    <div class="panel-tabs">
+      <button class="ptab active" onclick="switchTab('templates',this)">🖼️ Shablonlar</button>
+      <button class="ptab" onclick="switchTab('fields',this)">⚙️ Maydonlar</button>
+      <button class="ptab" onclick="switchTab('data',this)">📝 Ma'lumot</button>
+    </div>
+    
+    <!-- Shablonlar tabi -->
+    <div class="panel-body" id="tab-templates">
+      <div class="tpl-grid" id="tpl-list">
+        <div class="tpl-none" onclick="clearTemplate()">🚫 Shablon yo'q</div>
+      </div>
+    </div>
+    
+    <!-- Maydonlar tabi -->
+    <div class="panel-body" id="tab-fields" style="display:none;">
+      <div class="tools-grid">
+        <button class="tool-add-card" onclick="addTextField()">
+          <span class="tc-icon">✍️</span>
+          <span class="tc-title">Matn</span>
+        </button>
+        <button class="tool-add-card" onclick="addImageField()">
+          <span class="tc-icon">🖼️</span>
+          <span class="tc-title">Rasm</span>
+        </button>
+        <button class="tool-add-card" onclick="addQrField()">
+          <span class="tc-icon">▚</span>
+          <span class="tc-title">QR Kod</span>
+        </button>
+        <button class="tool-add-card" onclick="addLogoField()">
+          <span class="tc-icon">🎗️</span>
+          <span class="tc-title">Logo</span>
+        </button>
+        <button class="tool-add-card" onclick="addSealField()">
+          <span class="tc-icon">◎</span>
+          <span class="tc-title">Muhr</span>
+        </button>
+        <button class="tool-add-card" onclick="addSignatureField()">
+          <span class="tc-icon">✍️</span>
+          <span class="tc-title">Imzo</span>
+        </button>
+      </div>
+      
+      <div class="layers-section">
+        <h3>Mavjud Qatlamlar</h3>
+        <div class="field-list" id="field-list"></div>
+      </div>
+    </div>
+    
+    <!-- Ma'lumot tabi -->
+    <div class="panel-body" id="tab-data" style="display:none;">
+      <div class="form-row">
+        <label>Hujjat turi</label>
+        <select id="d-doctype" class="prop-select" style="background:#111726; border-color:rgba(255,255,255,0.08);">
+          <option value="certificate">🎓 Sertifikat</option>
+          <option value="diploma">📜 Diplom</option>
+          <option value="gratitude">🤝 Tashakkurnoma</option>
+          <option value="honor">🏆 Faxriy yorliq</option>
+          <option value="commendation">🌟 Maqtov yorlig'i</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Oluvchi ismi *</label><input id="d-name" type="text" placeholder="Ism Familiya"></div>
+      <div class="form-row"><label>Email manzili</label><input id="d-email" type="email" placeholder="email@example.com"></div>
+      <div class="form-row"><label id="d-course-label">Kurs nomi</label><input id="d-course" type="text" placeholder="Kurs yoki yo'nalish"></div>
+      <div class="form-row"><label>Berilgan sana</label><input id="d-date" type="date"></div>
+      <div class="form-row"><label>Amal qilish muddati</label><input id="d-expiry" type="date"></div>
+    </div>
+  </div>
+
+  <!-- Central Canvas Board -->
+  <div class="canvas-area" id="canvas-area" onclick="deselectAll(event)">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="cert-canvas" width="1280" height="960"></canvas>
+      <div class="field-overlay" id="field-overlay"></div>
+    </div>
+  </div>
+
+  <!-- Figma Style Right Panel (Maydon Xususiyatlari) -->
+  <div class="right-panel" style="display: block;">
+    <div id="no-sel" class="no-selection">
+      <div style="font-size:36px;margin-bottom:12px;">👆</div>
+      <div style="font-weight:600;color:#64748b;">Tahrirlash uchun ekrandan biror maydonni tanlang</div>
+    </div>
+    
+    <div id="props-panel" style="display:none;">
+      <h3>Xususiyatlar</h3>
+      
+      <div class="prop-group">
+        <label class="prop-label">Matn kontenti</label>
+        <input class="prop-input" id="p-text" type="text" oninput="updateProp('text',this.value)">
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Shrift o'lchami</label>
+        <div class="prop-row">
+          <input class="prop-input" id="p-size" type="number" min="8" max="200" style="flex:1;" oninput="updateProp('fontSize',+this.value)">
+          <span style="font-size:12px;color:#475569;align-self:center;font-weight:600;">px</span>
+        </div>
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Matn rangi</label>
+        <div class="prop-row">
+          <input class="prop-color" id="p-color" type="color" oninput="updateProp('color',this.value)">
+          <input class="prop-input" id="p-color-hex" type="text" readonly style="flex:1;font-family:monospace;font-size:12px;">
+        </div>
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Matn qalinligi</label>
+        <select class="prop-select" id="p-weight" onchange="updateProp('fontWeight',this.value)">
+          <option value="normal">Normal</option>
+          <option value="bold">Qalin (Bold)</option>
+          <option value="300">Yengil (300)</option>
+          <option value="800">Juda qalin (800)</option>
+        </select>
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Shrift oilasi (Font Family)</label>
+        <select class="prop-select" id="p-font" onchange="updateProp('fontFamily',this.value)">
+          <option value="Arial">Arial</option>
+          <option value="Roboto">Roboto</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Matn hizalanishi</label>
+        <div class="align-btns">
+          <button class="align-btn" id="al-left" onclick="updateProp('align','left')" title="Chapga hizalash">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="15" y1="18" x2="3" y2="18"/></svg>
+          </button>
+          <button class="align-btn" id="al-center" onclick="updateProp('align','center')" title="Markazga hizalash">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="16" y1="18" x2="8" y2="18"/></svg>
+          </button>
+          <button class="align-btn" id="al-right" onclick="updateProp('align','right')" title="O'ngga hizalash">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="9" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Maydon kengligi (Eni - px)</label>
+        <input class="prop-input" id="p-width" type="number" min="40" oninput="updateProp('w',+this.value)">
+      </div>
+      
+      <div class="prop-group">
+        <label class="prop-label">Dinamik o'zgaruvchi</label>
+        <select class="prop-select" id="p-variable" onchange="updateProp('variable',this.value)">
+          <option value="">— o'zgaruvchi yo'q —</option>
+          <option value="{{recipient_name}}">Oluvchi ismi</option>
+          <option value="{{course_name}}">Kurs nomi</option>
+          <option value="{{issued_date}}">Sana</option>
+          <option value="{{cert_id}}">Sertifikat ID</option>
+          <option value="{{issuer_name}}">Tashkilot</option>
+        </select>
+      </div>
+      
+      <button class="tbtn tbtn-danger btn-full" onclick="deleteSelected()" style="margin-top:20px;">🗑️ Maydonni o'chirish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/i18n.js"></script>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+let CANVAS_W = 1280, CANVAS_H = 960;
+let ORIENTATION = 'landscape';
+let scale = 0.5, fields = [], selectedId = null, templateId = null, bgImage = null;
+let nextId = 1;
+let templatesById = {};
+const GRID = 10;
+let historyStack = [];
+let historyIndex = -1;
+let isRestoringHistory = false;
+
+// Unified branding image assets
+let USER_PROFILE = null;
+let userLogoImg = null;
+let userSigImg = null;
+let userSealImg = null;
+
+async function loadUserProfile() {
+  try {
+    const res = await Api.auth.me();
+    if (res && res.user) {
+      USER_PROFILE = res.user;
+      
+      // Load Logo
+      if (res.user.logo_url) {
+        userLogoImg = new Image();
+        userLogoImg.crossOrigin = "anonymous";
+        userLogoImg.src = '/' + res.user.logo_url + '?t=' + Date.now();
+        userLogoImg.onload = renderCanvas;
+      }
+      
+      // Load Signature
+      if (res.user.signature_url) {
+        userSigImg = new Image();
+        userSigImg.crossOrigin = "anonymous";
+        userSigImg.src = '/' + res.user.signature_url + '?t=' + Date.now();
+        userSigImg.onload = renderCanvas;
+      }
+      
+      // Load Seal
+      if (res.user.seal_url) {
+        userSealImg = new Image();
+        userSealImg.crossOrigin = "anonymous";
+        userSealImg.src = '/' + res.user.seal_url + '?t=' + Date.now();
+        userSealImg.onload = renderCanvas;
+      }
+    }
+  } catch (e) {
+    console.error("User profile load error:", e);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  setScale(getInitialScale());
+  await loadTemplates();
+  loadUserProfile();
+  document.getElementById('d-date').value = new Date().toISOString().slice(0,10);
+  ['d-name','d-email','d-course','d-date','d-expiry'].forEach(id =>
+    document.getElementById(id).addEventListener('input', renderCanvas));
+  
+  // Dynamic Admin Panel return button injection
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (['admin', 'super_admin'].includes(user.role)) {
+      const topbarLeft = document.querySelector('.topbar-left');
+      if (topbarLeft) {
+        const adminBtn = document.createElement('a');
+        adminBtn.href = '/admin/index.html';
+        adminBtn.className = 'tbtn tbtn-outline';
+        adminBtn.style.marginLeft = '12px';
+        adminBtn.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        adminBtn.style.padding = '0 12px';
+        adminBtn.style.height = '34px';
+        adminBtn.style.fontSize = '12px';
+        adminBtn.innerHTML = '🛡️ Admin';
+        topbarLeft.appendChild(adminBtn);
+      }
+    }
+  } catch (_) {}
+
+  if (new URLSearchParams(location.search).get('load_saved') === '1') {
+    await loadLayout();
+  } else {
+    renderAll();
+    pushHistory();
+  }
+});
+
+function getInitialScale() {
+  if (!window.matchMedia('(max-width: 768px)').matches) return 0.5;
+  return Math.max(0.22, Math.min(0.5, (window.innerWidth - 28) / CANVAS_W));
+}
+
+// --- Orientation ---
+function toggleOrientation() {
+  ORIENTATION = ORIENTATION === 'landscape' ? 'portrait' : 'landscape';
+  if (ORIENTATION === 'portrait') {
+    CANVAS_W = 960; CANVAS_H = 1280;
+    document.getElementById('orient-btn').textContent = '▯ Portrait';
+  } else {
+    CANVAS_W = 1280; CANVAS_H = 960;
+    document.getElementById('orient-btn').textContent = '▬ Landscape';
+  }
+  const cv = document.getElementById('cert-canvas');
+  cv.width  = CANVAS_W;
+  cv.height = CANVAS_H;
+  setScale(window.matchMedia('(max-width: 768px)').matches ? getInitialScale() : scale);
+  renderAll();
+  pushHistory();
+}
+
+// --- Masshtab ---
+function setScale(s) {
+  scale = Math.min(1.5, Math.max(0.2, +s.toFixed(1)));
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.style.width  = (CANVAS_W * scale) + 'px';
+  wrap.style.height = (CANVAS_H * scale) + 'px';
+  const cv = document.getElementById('cert-canvas');
+  cv.style.width  = (CANVAS_W * scale) + 'px';
+  cv.style.height = (CANVAS_H * scale) + 'px';
+  document.getElementById('scale-label').textContent = Math.round(scale*100) + '%';
+  renderOverlay();
+}
+function changeScale(d) { setScale(scale + d); }
+
+function fitToScreen() {
+  const area = document.getElementById('canvas-area');
+  const wScale = (area.clientWidth - 56) / CANVAS_W;
+  const hScale = (area.clientHeight - 56) / CANVAS_H;
+  setScale(Math.max(0.2, Math.min(1.5, wScale, hScale)));
+}
+
+// --- Tab ---
+function switchTab(name, btn) {
+  ['templates','fields','data'].forEach(t =>
+    document.getElementById('tab-'+t).style.display = t===name ? '' : 'none');
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// --- Shablonlar ---
+async function loadTemplates() {
+  const list = document.getElementById('tpl-list');
+  const none = '<div class="tpl-none" onclick="clearTemplate()">🚫 Shablon yo\'q</div>';
+  try {
+    const res = await Api.certs.templates();
+    if (!Array.isArray(res) || !res.length) { list.innerHTML = none; return; }
+    templatesById = Object.fromEntries(res.map(t => [String(t.id), t]));
+    list.innerHTML = none + res.map(t => `
+      <div class="tpl-item" id="tpl-${t.id}" onclick="selectTemplate(${t.id},'${esc(t.preview_url||t.file_url||'')}')">
+        <img src="/${t.preview_url||t.file_url}" alt="${esc(t.name)}">
+        <div class="tpl-name">${esc(t.name)}</div>
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="grid-column:1/-1;color:#fca5a5;font-size:12px;line-height:1.5;">Shablonlar yuklanmadi: ' + esc(e.message || 'server xatosi') + '</div>' + none;
+    showToast(e.message || 'Shablonlar yuklanmadi', 'error');
+  }
+}
+function selectTemplate(id, url) {
+  templateId = id;
+  document.querySelectorAll('.tpl-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('tpl-'+id)?.classList.add('selected');
+  const img = new Image();
+  img.onload  = () => {
+    bgImage = img;
+    applyTemplateFields(id);
+    renderAll();
+    pushHistory();
+  };
+  img.onerror = () => { bgImage = null; renderCanvas(); };
+  img.src = '/' + url;
+}
+function applyTemplateFields(id) {
+  if (fields.length > 0) return;
+
+  const tpl = templatesById[String(id)];
+  let tplFields = tpl?.fields || [];
+  if (typeof tplFields === 'string') {
+    try { tplFields = JSON.parse(tplFields); } catch (_) { tplFields = []; }
+  }
+  if (!Array.isArray(tplFields) || !tplFields.length) return;
+
+  if (!tplFields.some(f => f.type === 'qr')) {
+    tplFields.push({
+      type:'qr', text:'QR kod', variable:'{{cert_id}}',
+      x:1050, y:730, w:140, h:140, fontSize:14, color:'#111827', fontWeight:'normal', align:'center'
+    });
+  }
+
+  fields = tplFields.map(f => ({ ...f, id: nextId++ }));
+  selectedId = fields[0]?.id || null;
+  syncPropsPanel();
+}
+function clearTemplate() {
+  templateId = null; bgImage = null;
+  document.querySelectorAll('.tpl-item').forEach(el => el.classList.remove('selected'));
+  renderCanvas();
+  pushHistory();
+}
+
+// --- Maydonlar ---
+function addTextField() {
+  const f = { id: nextId++, type:'text', text:'Matn', variable:'',
+    x:200, y:300, w:400, h:60, fontSize:32, color:'#1a1a1a', fontWeight:'bold', align:'center' };
+  fields.push(f); selectField(f.id); renderAll();
+  pushHistory();
+  switchTab('fields', document.querySelectorAll('.ptab')[1]);
+}
+function addImageField() {
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const f = { id:nextId++, type:'image', src:ev.target.result, imgEl:img,
+          x:200, y:200, w:200, h:150, text:file.name, variable:'',
+          fontSize:14, color:'#000', fontWeight:'normal', align:'left' };
+        fields.push(f); selectField(f.id); renderAll(); pushHistory();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+function addQrField() {
+  const existing = fields.find(f => f.type === 'qr');
+  if (existing) {
+    selectField(existing.id);
+    switchTab('fields', document.querySelectorAll('.ptab')[1]);
+    return;
+  }
+
+  const f = { id: nextId++, type:'qr', text:'QR kod', variable:'{{cert_id}}',
+    x:1050, y:730, w:140, h:140, fontSize:14, color:'#111827', fontWeight:'normal', align:'center' };
+  fields.push(f); selectField(f.id); renderAll();
+  pushHistory();
+  switchTab('fields', document.querySelectorAll('.ptab')[1]);
+}
+function addLogoField() {
+  const existing = fields.find(f => f.type === 'logo');
+  if (existing) {
+    selectField(existing.id);
+    switchTab('fields', document.querySelectorAll('.ptab')[1]);
+    showToast('Logo maydoni allaqachon qo\'shilgan. Uni sudrab joylashtiring!', '');
+    return;
+  }
+  if (!USER_PROFILE?.logo_url) {
+    showToast('Avval profilingizga logo yuklab olishingiz kerak', 'error');
+    return;
+  }
+  const f = { id: nextId++, type: 'logo', text: 'Logo', variable: '',
+    x: 50, y: CANVAS_H - 130, w: 100, h: 100,
+    fontSize: 14, color: '#000000', fontWeight: 'normal', align: 'left' };
+  fields.push(f); selectField(f.id); renderAll();
+  pushHistory();
+  switchTab('fields', document.querySelectorAll('.ptab')[1]);
+}
+function addSealField() {
+  const f = { id: nextId++, type:'seal', text:'TASDIQLANGAN', variable:'',
+    x:565, y:120, w:150, h:150, fontSize:14, color:'#0f766e', fontWeight:'bold', align:'center' };
+  fields.push(f); selectField(f.id); renderAll();
+  pushHistory();
+  switchTab('fields', document.querySelectorAll('.ptab')[1]);
+}
+function addSignatureField() {
+  const f = { id: nextId++, type:'signature', text:'Imzo', variable:'',
+    x:780, y:650, w:260, h:70, fontSize:20, color:'#111827', fontWeight:'normal', align:'center' };
+  fields.push(f); selectField(f.id); renderAll();
+  pushHistory();
+  switchTab('fields', document.querySelectorAll('.ptab')[1]);
+}
+function deleteSelected() {
+  if (!selectedId) return;
+  fields = fields.filter(f => f.id !== selectedId); selectedId = null;
+  renderAll(); syncPropsPanel();
+  pushHistory();
+}
+function selectField(id) { selectedId = id; syncPropsPanel(); renderOverlay(); }
+function deselectAll(e) {
+  const targets = ['canvas-area','canvas-wrap','cert-canvas'];
+  if (targets.includes(e.target.id)) { selectedId = null; syncPropsPanel(); renderOverlay(); }
+}
+function updateProp(key, val) {
+  const f = fields.find(f => f.id === selectedId); if (!f) return;
+  f[key] = val; renderAll(); syncPropsPanel();
+  pushHistory();
+}
+
+function snap(v) {
+  return document.getElementById('snap-toggle')?.checked ? Math.round(v / GRID) * GRID : Math.round(v);
+}
+
+// --- History Stack ---
+function pushHistory() {
+  if (isRestoringHistory) return;
+  const snapshot = serializeLayout();
+  if (historyStack[historyIndex] === snapshot) return;
+  historyStack = historyStack.slice(0, historyIndex + 1);
+  historyStack.push(snapshot);
+  if (historyStack.length > 60) historyStack.shift();
+  historyIndex = historyStack.length - 1;
+}
+
+function undoLayout() {
+  if (historyIndex <= 0) return;
+  isRestoringHistory = true;
+  historyIndex--;
+  restoreLayout(historyStack[historyIndex]);
+  isRestoringHistory = false;
+}
+
+function restoreLayout(raw) {
+  const saved = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  ORIENTATION = saved.orientation === 'portrait' ? 'portrait' : 'landscape';
+  CANVAS_W = ORIENTATION === 'portrait' ? 960 : 1280;
+  CANVAS_H = ORIENTATION === 'portrait' ? 1280 : 960;
+
+  const cv = document.getElementById('cert-canvas');
+  cv.width = CANVAS_W;
+  cv.height = CANVAS_H;
+  document.getElementById('orient-btn').textContent = ORIENTATION === 'portrait' ? 'Portrait' : 'Landscape';
+
+  templateId = saved.templateId || null;
+  bgImage = null;
+  if (templateId && templatesById[String(templateId)]) {
+    const tpl = templatesById[String(templateId)];
+    const url = tpl.preview_url || tpl.file_url || '';
+    if (url) {
+      const img = new Image();
+      img.onload = () => { bgImage = img; renderCanvas(); };
+      img.src = '/' + url;
+    }
+  }
+  fields = Array.isArray(saved.fields) ? saved.fields.map(f => ({ ...f, id: nextId++ })) : [];
+  selectedId = fields[0]?.id || null;
+
+  if (saved.data && typeof saved.data === 'object') {
+    document.getElementById('d-doctype').value = saved.data.doc_type || 'certificate';
+    document.getElementById('d-name').value    = saved.data.recipient_name || '';
+    document.getElementById('d-email').value   = saved.data.recipient_email || '';
+    document.getElementById('d-course').value  = saved.data.course_name || '';
+    document.getElementById('d-date').value    = saved.data.issued_date || new Date().toISOString().slice(0,10);
+    document.getElementById('d-expiry').value  = saved.data.expiry_date || '';
+    document.getElementById('d-doctype').dispatchEvent(new Event('change'));
+  }
+
+  fields.forEach(f => {
+    if (f.type === 'image' && f.src) {
+      const img = new Image();
+      img.onload = renderCanvas;
+      img.src = f.src;
+      f.imgEl = img;
+    }
+  });
+
+  setScale(window.matchMedia('(max-width: 768px)').matches ? getInitialScale() : scale);
+  renderAll();
+  syncPropsPanel();
+}
+
+function serializeLayout() {
+  const safe = fields.map(({ imgEl, ...rest }) => rest);
+  return JSON.stringify({ orientation: ORIENTATION, templateId, fields: safe });
+}
+
+function getConstructorData() {
+  return {
+    doc_type:        document.getElementById('d-doctype').value || 'certificate',
+    recipient_name:  document.getElementById('d-name').value.trim(),
+    recipient_email: document.getElementById('d-email').value.trim(),
+    course_name:     document.getElementById('d-course').value.trim(),
+    issued_date:     document.getElementById('d-date').value,
+    expiry_date:     document.getElementById('d-expiry').value,
+  };
+}
+
+function buildLayoutState() {
+  const safe = fields.map(({ imgEl, ...rest }) => rest);
+  return {
+    version: 1,
+    saved_at: new Date().toISOString(),
+    orientation: ORIENTATION,
+    templateId,
+    fields: safe,
+    data: getConstructorData(),
+  };
+}
+
+async function saveLayout() {
+  const layout = buildLayoutState();
+  try {
+    await Api.layout.saveLayout({ name: 'Asosiy layout', layout });
+    localStorage.setItem('certificate_constructor_layout', JSON.stringify(layout));
+    showToast('Ish profilingizga saqlandi', 'success');
+  } catch (e) {
+    showToast(e.message || 'Ishni profilga saqlashda xato', 'error');
+  }
+}
+
+async function loadLayout() {
+  try {
+    const saved = await Api.layout.loadLayout();
+    restoreLayout(saved.layout);
+    localStorage.setItem('certificate_constructor_layout', JSON.stringify(saved.layout));
+    pushHistory();
+    showToast('Profilingizdagi saqlangan ish ochildi', 'success');
+  } catch (e) {
+    showToast(e.message || 'Profilingizda saqlangan ish topilmadi', 'error');
+  }
+}
+
+// --- Properties Panel sync ---
+function syncPropsPanel() {
+  const f = fields.find(f => f.id === selectedId);
+  document.getElementById('no-sel').style.display    = f ? 'none' : '';
+  document.getElementById('props-panel').style.display = f ? '' : 'none';
+  if (!f) return;
+  document.getElementById('p-text').value     = f.text     || '';
+  document.getElementById('p-size').value     = f.fontSize || 32;
+  document.getElementById('p-color').value    = f.color    || '#1a1a1a';
+  document.getElementById('p-color-hex').value = f.color   || '#1a1a1a';
+  document.getElementById('p-weight').value   = f.fontWeight || 'bold';
+  document.getElementById('p-font').value     = f.fontFamily || 'Arial';
+  document.getElementById('p-width').value    = Math.round(f.w || 400);
+  document.getElementById('p-variable').value = f.variable  || '';
+  ['left','center','right'].forEach(a =>
+    document.getElementById('al-'+a).classList.toggle('active', f.align===a));
+  renderFieldList();
+}
+function renderFieldList() {
+  document.getElementById('field-list').innerHTML = fields.map(f => `
+    <div class="field-chip${f.id===selectedId?' active':''}" onclick="selectField(${f.id})">
+      <span class="fc-icon">${fieldIcon(f)}</span>
+      <span class="fc-label">${esc(f.text?.slice(0,18)||'Matn')}</span>
+      <span class="fc-del" onclick="event.stopPropagation();removeField(${f.id})">✖</span>
+    </div>`).join('');
+}
+function removeField(id) {
+  fields = fields.filter(f => f.id!==id);
+  if (selectedId===id) selectedId=null;
+  renderAll(); syncPropsPanel();
+  pushHistory();
+}
+
+function duplicateSelected() {
+  const f = fields.find(f => f.id === selectedId);
+  if (!f) return showToast('Avval maydonni tanlang', 'error');
+  const { imgEl, ...rest } = f;
+  const copy = {
+    ...rest,
+    id: nextId++,
+    text: `${rest.text || 'Maydon'} copy`,
+    x: Math.min(CANVAS_W - (rest.w || 120), (rest.x || 0) + 30),
+    y: Math.min(CANVAS_H - (rest.h || 60), (rest.y || 0) + 30),
+  };
+  if (imgEl) copy.imgEl = imgEl;
+  fields.push(copy);
+  selectField(copy.id);
+  renderAll();
+  pushHistory();
+}
+
+function alignSelected(mode) {
+  const f = fields.find(f => f.id === selectedId);
+  if (!f) return showToast('Avval maydonni tanlang', 'error');
+  if (mode === 'left') f.x = 60;
+  if (mode === 'right') f.x = CANVAS_W - (f.w || 120) - 60;
+  if (mode === 'center-x') f.x = Math.round((CANVAS_W - (f.w || 120)) / 2);
+  if (mode === 'center-y') f.y = Math.round((CANVAS_H - (f.h || 60)) / 2);
+  f.x = snap(f.x);
+  f.y = snap(f.y);
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+}
+
+// --- Canvas Draw Operations ---
+function getVars() {
+  return {
+    '{{recipient_name}}': document.getElementById('d-name').value    || 'Ism Familiya',
+    '{{course_name}}':    document.getElementById('d-course').value  || 'Kurs nomi',
+    '{{issued_date}}':    document.getElementById('d-date').value    || new Date().toISOString().slice(0,10),
+    '{{cert_id}}':        'S-XXXXXXXX',
+    '{{issuer_name}}':    'Tashkilot',
+  };
+}
+
+function renderCanvas() {
+  const cv  = document.getElementById('cert-canvas');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+  if (bgImage) {
+    ctx.drawImage(bgImage, 0, 0, CANVAS_W, CANVAS_H);
+  } else {
+    ctx.fillStyle = '#faf6ee'; ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    ctx.strokeStyle = '#c8a84b'; ctx.lineWidth = 8; ctx.strokeRect(10,10,CANVAS_W-20,CANVAS_H-20);
+    ctx.strokeStyle = '#e8c96a'; ctx.lineWidth = 1; ctx.strokeRect(18,18,CANVAS_W-36,CANVAS_H-36);
+  }
+
+  const vars = getVars();
+  fields.forEach(f => {
+    const txt = f.variable ? (vars[f.variable]||f.text||f.variable) : (f.text||'');
+    if (f.type==='qr') {
+      drawQrPreview(ctx, f.x, f.y, f.w, f.h);
+    } else if (f.type==='logo') {
+      if (userLogoImg) {
+        ctx.drawImage(userLogoImg, f.x, f.y, f.w, f.h);
+      } else {
+        ctx.save();
+        ctx.fillStyle = '#e0e7ff';
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const r = 8;
+        ctx.moveTo(f.x + r, f.y);
+        ctx.lineTo(f.x + f.w - r, f.y);
+        ctx.quadraticCurveTo(f.x + f.w, f.y, f.x + f.w, f.y + r);
+        ctx.lineTo(f.x + f.w, f.y + f.h - r);
+        ctx.quadraticCurveTo(f.x + f.w, f.y + f.h, f.x + f.w - r, f.y + f.h);
+        ctx.lineTo(f.x + r, f.y + f.h);
+        ctx.quadraticCurveTo(f.x, f.y + f.h, f.x, f.y + f.h - r);
+        ctx.lineTo(f.x, f.y + r);
+        ctx.quadraticCurveTo(f.x, f.y, f.x + r, f.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#6366f1';
+        ctx.font = 'bold 13px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🎗️ Logo', f.x + f.w/2, f.y + f.h/2);
+        ctx.restore();
+      }
+    } else if (f.type==='seal') {
+      if (userSealImg) {
+        ctx.drawImage(userSealImg, f.x, f.y, f.w, f.h);
+      } else {
+        drawSealPreview(ctx, f);
+      }
+    } else if (f.type==='signature') {
+      if (userSigImg) {
+        ctx.drawImage(userSigImg, f.x, f.y, f.w, f.h);
+      } else {
+        drawSignaturePreview(ctx, f);
+      }
+    } else if (f.type==='image' && f.imgEl) {
+      ctx.drawImage(f.imgEl, f.x, f.y, f.w, f.h);
+    } else {
+      ctx.font         = `${f.fontWeight||'normal'} ${f.fontSize||32}px ${f.fontFamily||'Arial'}, sans-serif`;
+      ctx.fillStyle    = f.color || '#1a1a1a';
+      ctx.textAlign    = f.align || 'left';
+      ctx.textBaseline = 'top';
+      const tx = f.align==='center' ? f.x+f.w/2 : f.align==='right' ? f.x+f.w : f.x;
+      ctx.fillText(txt, tx, f.y, f.w);
+    }
+  });
+}
+
+function fieldIcon(f) {
+  return f.type === 'qr' ? '▚' : f.type === 'logo' ? '🎗️' : f.type === 'image' ? '🖼️' : f.type === 'seal' ? '◎' : f.type === 'signature' ? '✍️' : '📄';
+}
+
+function drawQrPreview(ctx, x, y, w, h) {
+  const size = Math.max(48, Math.min(w, h));
+  ctx.save();
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = 'rgba(17,24,39,.22)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeRect(x, y, size, size);
+
+  const pad = Math.max(6, Math.round(size * 0.08));
+  const cells = 9;
+  const cell = Math.floor((size - pad * 2) / cells);
+  ctx.fillStyle = '#111827';
+  for (let r = 0; r < cells; r++) {
+    for (let c = 0; c < cells; c++) {
+      const finder = (r < 3 && c < 3) || (r < 3 && c > 5) || (r > 5 && c < 3);
+      const data = ((r * 3 + c * 5 + r * c) % 4) === 0;
+      if (finder || data) ctx.fillRect(x + pad + c * cell, y + pad + r * cell, Math.max(1, cell - 1), Math.max(1, cell - 1));
+    }
+  }
+  ctx.restore();
+}
+
+function drawSealPreview(ctx, f) {
+  const size = Math.max(72, Math.min(f.w, f.h));
+  const cx = f.x + size / 2, cy = f.y + size / 2;
+  ctx.save();
+  ctx.strokeStyle = f.color || '#0f766e';
+  ctx.fillStyle = f.color || '#0f766e';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, size / 2 - 4, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, size / 2 - 18, 0, Math.PI * 2); ctx.stroke();
+  ctx.font = `bold ${Math.max(10, f.fontSize || 14)}px Arial`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(f.text || 'TASDIQLANGAN', cx, cy);
+  ctx.restore();
+}
+
+function drawSignaturePreview(ctx, f) {
+  ctx.save();
+  ctx.strokeStyle = f.color || '#111827';
+  ctx.fillStyle = f.color || '#111827';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(f.x + 8, f.y + f.h * .55);
+  ctx.bezierCurveTo(f.x + 55, f.y + 5, f.x + 105, f.y + f.h - 8, f.x + 155, f.y + f.h * .35);
+  ctx.bezierCurveTo(f.x + 190, f.y + 10, f.x + 220, f.y + f.h * .72, f.x + f.w - 8, f.y + f.h * .48);
+  ctx.stroke();
+  ctx.font = `${Math.max(12, f.fontSize || 18)}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.fillText(f.text || 'Imzo', f.x + f.w / 2, f.y + f.h - 8);
+  ctx.restore();
+}
+
+function renderOverlay() {
+  const ov = document.getElementById('field-overlay');
+  ov.innerHTML = '';
+  fields.forEach(f => {
+    const el = document.createElement('div');
+    el.className = 'drag-handle' + (f.id===selectedId?' selected':'');
+    el.style.cssText = `left:${f.x*scale}px;top:${f.y*scale}px;width:${f.w*scale}px;height:${(f.h||60)*scale}px;`;
+
+    const resEl = document.createElement('div');
+    resEl.className = 'resize-br';
+    resEl.addEventListener('mousedown', e => { e.stopPropagation(); startResize(e,f); });
+    el.appendChild(resEl);
+
+    el.addEventListener('mousedown', e => { if(e.target===resEl) return; startDrag(e,f); });
+    el.addEventListener('click',     e => { e.stopPropagation(); selectField(f.id); });
+    ov.appendChild(el);
+  });
+}
+
+function renderAll() { renderCanvas(); renderOverlay(); renderFieldList(); }
+
+// --- Drag & Resize ---
+function startDrag(e, f) {
+  e.preventDefault(); selectField(f.id);
+  const ox=f.x, oy=f.y, sx=e.clientX, sy=e.clientY;
+  const onMove = ev => {
+    f.x = snap(Math.max(0, ox+(ev.clientX-sx)/scale));
+    f.y = snap(Math.max(0, oy+(ev.clientY-sy)/scale));
+    renderAll();
+  };
+  const onUp = () => { document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); pushHistory(); };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+function startResize(e, f) {
+  e.preventDefault();
+  const sw=f.w, sh=f.h||60, sx=e.clientX, sy=e.clientY;
+  const onMove = ev => {
+    f.w = snap(Math.max(40, sw+(ev.clientX-sx)/scale));
+    f.h = snap(Math.max(20, sh+(ev.clientY-sy)/scale));
+    renderAll(); syncPropsPanel();
+  };
+  const onUp = () => { document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); pushHistory(); };
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onUp);
+}
+
+// --- Yaratish ---
+async function generateCert() {
+  const name = document.getElementById('d-name').value.trim();
+  if (!name) { showToast('Oluvchi ismi kiritilishi shart','error'); switchTab('data',document.querySelectorAll('.ptab')[2]); return; }
+  const btn = document.getElementById('generate-btn');
+  const status = document.getElementById('create-status');
+  if (btn.disabled) return;
+
+  const safe = fields.map(({ imgEl, ...rest }) => rest);
+  const payload = {
+    recipient_name:  name,
+    recipient_email: document.getElementById('d-email').value.trim()  || null,
+    course_name:     document.getElementById('d-course').value.trim() || null,
+    issued_date:     document.getElementById('d-date').value          || null,
+    expiry_date:     document.getElementById('d-expiry').value        || null,
+    template_id:     templateId || null,
+    orientation:     ORIENTATION,
+    doc_type:        document.getElementById('d-doctype').value       || 'certificate',
+    fields:          safe,
+  };
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Yaratilmoqda...';
+    status.textContent = 'Saqlanmoqda...';
+    showToast('Sertifikat yaratilmoqda...','');
+    const res = await Api.certs.create(payload);
+    if (res?.id || res?.cert_id) {
+      status.textContent = 'Tayyor';
+      showToast('✅ Sertifikat yaratildi!','success');
+      setTimeout(()=>location.href='/dashboard.html',900);
+    } else {
+      throw new Error('Serverdan kutilgan javob kelmadi');
+    }
+  } catch (e) {
+    status.textContent = '';
+    showToast(e.message || 'Sertifikat yaratishda xato yuz berdi','error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Yaratish';
+  }
+}
+
+async function saveLayout() {
+  const layout = buildLayoutState();
+  try {
+    await Api.layout.saveLayout({ name: 'Asosiy layout', layout });
+    localStorage.setItem('certificate_constructor_layout', JSON.stringify(layout));
+    showToast('Ish profilingizga saqlandi', 'success');
+  } catch (e) {
+    showToast(e.message || 'Ishni profilga saqlashda xato', 'error');
+  }
+}
+
+async function loadLayout() {
+  try {
+    const saved = await Api.layout.loadLayout();
+    restoreLayout(saved.layout);
+    localStorage.setItem('certificate_constructor_layout', JSON.stringify(saved.layout));
+    pushHistory();
+    showToast('Profilingizdagi saqlangan ish ochildi', 'success');
+  } catch (e) {
+    showToast(e.message || 'Profilingizda saqlangan ish topilmadi', 'error');
+  }
+}
+
+function redoLayout() {
+  if (historyIndex >= historyStack.length - 1) return;
+  isRestoringHistory = true;
+  historyIndex++;
+  restoreLayout(historyStack[historyIndex]);
+  isRestoringHistory = false;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show '+(type||'');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.className='toast', type === 'error' ? 6500 : 3000);
+}
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const DOC_LABELS = {
+  certificate:  { course: 'Kurs nomi',           placeholder: 'Kurs yoki yo\'nalish' },
+  diploma:      { course: 'Yo\'nalish / Mutaxassislik', placeholder: 'Masalan: Axborot texnologiyalari' },
+  gratitude:    { course: 'Tashakkur sababi',    placeholder: 'Yordam, hissa, ish uchun' },
+  honor:        { course: 'Yorliq berish sababi', placeholder: 'Yutuq yoki xizmat' },
+  commendation: { course: 'Maqtov sababi',       placeholder: 'Faollik yoki yutuq' },
+};
+document.getElementById('d-doctype').addEventListener('change', e => {
+  const l = DOC_LABELS[e.target.value] || DOC_LABELS.certificate;
+  document.getElementById('d-course-label').textContent = l.course;
+  document.getElementById('d-course').placeholder       = l.placeholder;
+});
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target?.tagName || '').toLowerCase();
+  if (['input', 'textarea', 'select'].includes(tag)) return;
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    e.shiftKey ? redoLayout() : undoLayout();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+    e.preventDefault();
+    redoLayout();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+    duplicateSelected();
+    return;
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    deleteSelected();
+    return;
+  }
+
+  const f = fields.find(f => f.id === selectedId);
+  if (!f || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  e.preventDefault();
+  const step = e.shiftKey ? GRID : 1;
+  if (e.key === 'ArrowLeft') f.x = Math.max(0, f.x - step);
+  if (e.key === 'ArrowRight') f.x = Math.min(CANVAS_W - (f.w || 40), f.x + step);
+  if (e.key === 'ArrowUp') f.y = Math.max(0, f.y - step);
+  if (e.key === 'ArrowDown') f.y = Math.min(CANVAS_H - (f.h || 20), f.y + step);
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+});
+</script>
+<script src="/js/bottom-nav.js"></script>
+<style>
+@media (max-width: 1400px) {
+  .topbar-left h1, .topbar-left .sub-label {
+    display: none !important;
+  }
+  .topbar-left {
+    min-width: auto !important;
+    flex: 0 0 auto !important;
+  }
+}
+
+@media (max-width: 1220px) {
+  .topbar-center {
+    gap: 4px !important;
+  }
+  .topbar-center .divider {
+    display: none !important;
+  }
+  .topbar-center .control-group:last-child {
+    display: none !important;
+  }
+}
+
+@media (max-width: 990px) {
+  .topbar-center {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    height: 100dvh;
+    overflow: hidden;
+    background: #090d16;
+  }
+  .topbar {
+    min-height: 112px;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .topbar .logo {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+  .topbar h1 {
+    max-width: 112px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+  }
+  .topbar-right {
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .toolbar-row {
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .topbar-right .create-status,
+  .topbar-right label,
+  #scale-label {
+    display: none !important;
+  }
+  .tbtn {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 12px;
+    flex: 0 0 auto;
+  }
+  .workspace {
+    display: flex !important;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100dvh - 112px);
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+  .canvas-area {
+    order: 1;
+    min-height: 330px;
+    flex: 0 0 auto;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 14px;
+    overflow: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-overflow-scrolling: touch;
+  }
+  .canvas-wrap {
+    flex: 0 0 auto;
+    margin: 0 auto;
+  }
+  .side-tool-menu {
+    order: 2;
+    width: 100%;
+    flex: 0 0 auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 14px;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .side-tool-menu .tbtn {
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    flex: 0 0 auto;
+  }
+  .side-tool-menu .tool-sep {
+    width: 1px;
+    height: 34px;
+    margin: 0 4px;
+    flex: 0 0 auto;
+  }
+  .left-panel,
+  .right-panel {
+    width: 100%;
+    flex: 0 0 auto;
+    border: 0;
+    background: #0d121f;
+  }
+  .left-panel {
+    order: 3;
+    max-height: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .right-panel {
+    order: 3;
+    padding: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .panel-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #0d121f;
+  }
+  .panel-body {
+    max-height: 260px;
+    padding: 12px;
+  }
+  .tpl-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tpl-item,
+  .tpl-none {
+    width: 140px;
+    min-width: 140px;
+  }
+  .field-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .field-chip {
+    min-width: 0;
+  }
+  .prop-row,
+  .align-btns {
+    gap: 8px;
+  }
+  .prop-input,
+  .prop-select,
+  .form-row input,
+  #d-doctype {
+    min-height: 42px;
+    font-size: 16px !important;
+  }
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+  .mobile-notice {
+    display: none !important;
+  }
+}
+.mobile-notice {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: #090d16;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 32px 24px; gap: 16px;
+}
+.mobile-notice h2 { font-size: 20px; font-weight: 700; color: #ffffff; font-family: 'Outfit', sans-serif; }
+.mobile-notice p { font-size: 14px; color: #94a3b8; line-height: 1.6; max-width: 280px; }
+.mobile-notice a {
+  display: inline-block; margin-top: 8px;
+  padding: 12px 24px; border-radius: 10px;
+  background: #4f46e5; color: #fff; text-decoration: none;
+  font-size: 14px; font-weight: 600;
+}
+</style>
+<div class="mobile-notice">
+  <div style="font-size:48px;">🖥️</div>
+  <h2>Desktop talab qilinadi</h2>
+  <p>Konstruktor katta ekranda ishlaydi. Sertifikat yaratish uchun kompyuter yoki planshetdan foydalaning.</p>
+  <a href="/dashboard.html">Kabinetga qaytish</a>
+</div>
+</body>
+</html>

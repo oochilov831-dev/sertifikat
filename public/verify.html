@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f766e">
+  <title>Sertifikatni tekshirish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 32px 20px;
+    }
+    h1, h2, h3, .brand {
+      font-family: 'Outfit', sans-serif;
+    }
+    .shell { max-width: 980px; margin: 0 auto; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 8px 0 22px; }
+    .brand { text-decoration: none; color: #0f766e; font-weight: 850; font-size: 22px; }
+    .top-note { color: #667085; font-size: 13px; text-align: right; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) 360px; gap: 18px; align-items: start; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .top { align-items: flex-start; flex-direction: column; } .top-note { text-align: left; } }
+    .panel { background: #fff; border: 1px solid #e3e8ef; border-radius: 14px; box-shadow: 0 12px 34px rgba(15, 23, 42, .08); overflow: hidden; }
+    .status { padding: 28px; border-bottom: 1px solid #e8edf3; display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center; }
+    .mark { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; font-weight: 900; }
+    .valid .mark { background: #dcfce7; color: #047857; }
+    .expired .mark { background: #fef3c7; color: #b45309; }
+    .invalid .mark { background: #fee2e2; color: #b91c1c; }
+    .loading .mark { background: #e0e7ff; color: #4338ca; }
+    .status h1 { font-size: 24px; line-height: 1.15; margin-bottom: 6px; }
+    .status p { color: #667085; font-size: 14px; line-height: 1.5; }
+    .body { padding: 24px 28px 28px; }
+    .id-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
+    .label { font-size: 11px; color: #7b8794; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 800; color: #0f766e; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .fields { grid-template-columns: 1fr; } }
+    .field { border-bottom: 1px solid #eef2f7; padding: 12px 0; }
+    .value { font-size: 16px; font-weight: 700; color: #172033; word-break: break-word; }
+    .issuer { margin-top: 18px; padding: 16px; background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 12px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 10px 14px; border-radius: 10px; border: 1px solid #d5dde8; background: #fff; color: #0f766e; text-decoration: none; font-weight: 800; font-size: 14px; cursor: pointer; }
+    .btn.primary { background: #0f766e; color: #fff; border-color: #0f766e; }
+    .side { padding: 20px; }
+    .search-title { font-weight: 850; font-size: 16px; margin-bottom: 10px; }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input { min-width: 0; flex: 1; border: 1px solid #d5dde8; border-radius: 10px; padding: 12px; font-size: 14px; text-transform: uppercase; }
+    .trust { margin-top: 18px; display: grid; gap: 10px; }
+    .trust-item { padding: 12px; border: 1px solid #edf1f6; border-radius: 10px; background: #fbfcfe; }
+    .trust-item b { display: block; font-size: 13px; margin-bottom: 3px; }
+    .trust-item span { display: block; color: #667085; font-size: 12px; line-height: 1.45; }
+    .spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid rgba(67,56,202,.2); border-top-color: #4338ca; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <a href="/" class="brand">Sertifikat Tizimi</a>
+    <div class="top-note">QR orqali ochilgan sertifikatlar rasmiy bazadan real vaqtda tekshiriladi.</div>
+  </div>
+
+  <div class="grid">
+    <main class="panel" id="main-card">
+      <div class="status loading">
+        <div class="mark"><div class="spinner"></div></div>
+        <div><h1>Tekshirilmoqda</h1><p>Sertifikat ma'lumotlari bazadan olinmoqda.</p></div>
+      </div>
+    </main>
+
+    <aside class="panel side">
+      <div class="search-title">ID orqali tekshirish</div>
+      <div class="search-row">
+        <input id="manual-id" placeholder="S-A1B2C3D4" autocomplete="off">
+        <button class="btn primary" onclick="check(document.getElementById('manual-id').value)">Tekshir</button>
+      </div>
+      <button class="btn" onclick="openScanner()" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;border:none;">
+        📷 Kamera bilan QR skanerlash
+      </button>
+      <div class="trust">
+        <div class="trust-item"><b>QR himoyasi</b><span>QR havola sertifikat ID yoki UUID orqali rasmiy yozuvni topadi.</span></div>
+        <div class="trust-item"><b>Bekor qilish nazorati</b><span>Bekor qilingan sertifikat haqiqiy sifatida ko'rsatilmaydi.</span></div>
+        <div class="trust-item"><b>Fayl bilan bog'lanish</b><span>Haqiqiy sertifikatda PDF/PNG fayliga bevosita havola ko'rsatiladi.</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Camera scanner modal -->
+<div id="scanner-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;padding:24px;max-width:480px;width:100%;text-align:center;">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:14px;color:#0f172a;">📷 QR kodni kameraga ko'rsating</h3>
+    <div style="position:relative;width:100%;aspect-ratio:1;background:#000;border-radius:12px;overflow:hidden;margin-bottom:14px;">
+      <video id="scanner-video" style="width:100%;height:100%;object-fit:cover;" playsinline muted></video>
+      <div style="position:absolute;inset:25%;border:3px solid #10b981;border-radius:12px;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.4);"></div>
+      <canvas id="scanner-canvas" style="display:none;"></canvas>
+    </div>
+    <div id="scanner-status" style="font-size:13px;color:#64748b;margin-bottom:14px;">Kameraga ruxsat berishingizni kutmoqdamiz...</div>
+    <button class="btn" onclick="closeScanner()" style="width:100%;background:#ef4444;color:#fff;border:none;">Yopish</button>
+  </div>
+</div>
+
+<script>
+const initialId = new URLSearchParams(location.search).get('id') || location.pathname.split('/verify/')[1];
+if (initialId) {
+  document.getElementById('manual-id').value = initialId;
+  check(initialId);
+} else {
+  showEmpty();
+}
+
+async function check(id) {
+  id = (id || '').trim();
+  if (!id) return;
+  history.replaceState(null, '', '/verify.html?id=' + encodeURIComponent(id));
+  showLoading();
+  try {
+    const res = await fetch('/verify/' + encodeURIComponent(id));
+    const json = await res.json();
+    if (json.success) showCert(json.data);
+    else showInvalid(json.message || 'Sertifikat topilmadi');
+  } catch (_) {
+    showInvalid('Server bilan ulanishda xato');
+  }
+}
+
+function showLoading() {
+  document.getElementById('main-card').innerHTML = `
+    <div class="status loading"><div class="mark"><div class="spinner"></div></div><div><h1>Tekshirilmoqda</h1><p>Sertifikat ma'lumotlari bazadan olinmoqda.</p></div></div>`;
+}
+
+function showEmpty() {
+  document.getElementById('main-card').innerHTML = `
+    <div class="status loading"><div class="mark">?</div><div><h1>Sertifikat ID kiriting</h1><p>QR havola yoki ID orqali sertifikat haqiqiyligini tekshiring.</p></div></div>`;
+}
+
+function showInvalid(message) {
+  document.getElementById('main-card').innerHTML = `
+    <div class="status invalid"><div class="mark">!</div><div><h1>Sertifikat tasdiqlanmadi</h1><p>${esc(message)}</p></div></div>
+    <div class="body"><p style="color:#667085;line-height:1.6;">ID noto'g'ri kiritilgan, sertifikat bekor qilingan yoki tizimda mavjud emas.</p></div>`;
+}
+
+const DOC_LABELS = {
+  certificate:  { name: 'Sertifikat',         courseLabel: 'Kurs / yo\'nalish' },
+  diploma:      { name: 'Diplom',             courseLabel: 'Yo\'nalish / Mutaxassislik' },
+  gratitude:    { name: 'Tashakkurnoma',      courseLabel: 'Tashakkur sababi' },
+  honor:        { name: 'Faxriy yorliq',      courseLabel: 'Yorliq berish sababi' },
+  commendation: { name: 'Maqtov yorlig\'i',   courseLabel: 'Maqtov sababi' },
+};
+
+function showCert(c) {
+  const dt    = DOC_LABELS[c.doc_type] || DOC_LABELS.certificate;
+  const docNm = dt.name;
+  const status = c.trust_status || (c.is_valid ? 'valid' : 'revoked');
+  const expired = status === 'expired';
+  const revoked = status === 'revoked';
+  const statusClass = revoked ? 'invalid' : expired ? 'expired' : 'valid';
+  const statusTitle = revoked ? `${docNm} bekor qilingan` : expired ? `${docNm} muddati tugagan` : `${docNm} haqiqiy`;
+  const statusText = revoked
+    ? (c.revoke_reason ? 'Bekor qilish sababi: ' + c.revoke_reason : `Bu ${docNm.toLowerCase()} egasi tomonidan bekor qilingan.`)
+    : expired
+      ? `Bu ${docNm.toLowerCase()} bazada mavjud, lekin amal qilish muddati tugagan.`
+      : `Bu ${docNm.toLowerCase()} rasmiy bazada mavjud va bekor qilinmagan.`;
+  const issued = fmtDate(c.issued_date);
+  const expiry = c.expiry_date ? fmtDate(c.expiry_date) : 'Cheklanmagan';
+  const pdf = c.file_pdf ? `<a class="btn primary" href="/${c.file_pdf}" target="_blank">Sertifikat faylini ochish</a>` : '';
+  const png = c.file_png ? `<a class="btn" href="/${c.file_png}" target="_blank">PNG ko'rish</a>` : '';
+
+  document.getElementById('main-card').innerHTML = `
+    <div class="status ${statusClass}"><div class="mark">${expired ? '!' : '✓'}</div><div><h1>${statusTitle}</h1><p>${statusText}</p></div></div>
+    <div class="body">
+      <div class="id-row"><div><div class="label">${docNm} ID</div><div class="mono">${esc(c.cert_id)}</div></div><div class="mono">${esc(c.uuid || '')}</div></div>
+      <div class="fields">
+        <div class="field"><div class="label">Kimga berilgan</div><div class="value">${esc(c.recipient_name)}</div></div>
+        <div class="field"><div class="label">${dt.courseLabel}</div><div class="value">${esc(c.course_name || '—')}</div></div>
+        <div class="field"><div class="label">Berilgan sana</div><div class="value">${issued}</div></div>
+        <div class="field"><div class="label">Amal qilish muddati</div><div class="value">${expiry}</div></div>
+        <div class="field"><div class="label">Tekshiruvlar</div><div class="value">${Number(c.view_count || 0) + 1} marta</div></div>
+        <div class="field"><div class="label">Holat</div><div class="value">${revoked ? 'Bekor qilingan' : expired ? 'Muddati tugagan' : 'Faol'}</div></div>
+        <div class="field"><div class="label">Hash tekshiruv</div><div class="value">${c.hash_valid ? 'Mos' : 'Mavjud emas / mos emas'}</div></div>
+      </div>
+      <div class="issuer"><div class="label">Bergan tashkilot</div><div class="value">${esc(c.issuer_company || c.issuer_name || 'Sertifikat Tizimi')}</div></div>
+      <div class="actions">${pdf}${png}<button class="btn" onclick="shareLink()">Havolani ulashish</button></div>
+    </div>`;
+}
+
+function shareLink() {
+  const url = location.href;
+  if (navigator.share) navigator.share({ title: 'Sertifikat tekshiruv', url });
+  else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => alert('Havola nusxalandi'));
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Camera QR scanner ──
+let scannerStream = null;
+let scannerLoopId = null;
+let barcodeDetector = null;
+
+async function openScanner() {
+  const modal  = document.getElementById('scanner-modal');
+  const video  = document.getElementById('scanner-video');
+  const status = document.getElementById('scanner-status');
+
+  modal.style.display = 'flex';
+  status.textContent  = 'Kameraga ruxsat berishingizni kutmoqdamiz...';
+
+  if (!('BarcodeDetector' in window)) {
+    status.textContent = 'Bu brauzerda lokal QR skaner mavjud emas. Sertifikat ID ni kiriting.';
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    status.textContent = 'Brauzeringiz kamerani qo\'llab-quvvatlamaydi.';
+    return;
+  }
+
+  try {
+    barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] });
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false,
+    });
+    video.srcObject = scannerStream;
+    await video.play();
+    status.textContent = '🔍 QR kodni qidirmoqda...';
+    scanLoop();
+  } catch (err) {
+    status.textContent = 'Kamera ochilmadi: ' + (err.message || 'ruxsat berilmadi');
+  }
+}
+
+function scanLoop() {
+  const video  = document.getElementById('scanner-video');
+  const canvas = document.getElementById('scanner-canvas');
+  const status = document.getElementById('scanner-status');
+
+  if (!scannerStream || video.readyState !== video.HAVE_ENOUGH_DATA) {
+    scannerLoopId = requestAnimationFrame(scanLoop);
+    return;
+  }
+
+  if (barcodeDetector) {
+    barcodeDetector.detect(video).then(codes => {
+      const value = codes?.[0]?.rawValue;
+      if (value) {
+        status.textContent = 'Topildi: ' + value;
+        if ('vibrate' in navigator) navigator.vibrate(150);
+        handleQrValue(value);
+        return;
+      }
+      scannerLoopId = requestAnimationFrame(scanLoop);
+    }).catch(err => {
+      status.textContent = 'QR o\'qishda xato: ' + (err.message || 'noma\'lum xato');
+      scannerLoopId = requestAnimationFrame(scanLoop);
+    });
+    return;
+  }
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const code = null;
+
+  if (code && code.data) {
+    status.textContent = '✓ Topildi: ' + code.data;
+    if ('vibrate' in navigator) navigator.vibrate(150);
+
+    // URLni parse qilish — to'liq link bo'lsa ham, faqat ID bo'lsa ham qabul
+    let id = code.data.trim();
+    const match = id.match(/[A-Z]{1,4}-[A-Z0-9]{8}/i);
+    if (match) id = match[0];
+    else if (id.includes('id=')) id = new URL(id, location.origin).searchParams.get('id') || id;
+
+    closeScanner();
+    document.getElementById('manual-id').value = id;
+    check(id);
+    return;
+  }
+
+  scannerLoopId = requestAnimationFrame(scanLoop);
+}
+
+function handleQrValue(value) {
+  let id = String(value || '').trim();
+  const match = id.match(/[A-Z]{1,4}-[A-Z0-9]{8}/i);
+  if (match) id = match[0];
+  else if (id.includes('id=')) id = new URL(id, location.origin).searchParams.get('id') || id;
+
+  closeScanner();
+  document.getElementById('manual-id').value = id;
+  check(id);
+}
+
+function closeScanner() {
+  const modal = document.getElementById('scanner-modal');
+  modal.style.display = 'none';
+
+  if (scannerLoopId) {
+    cancelAnimationFrame(scannerLoopId);
+    scannerLoopId = null;
+  }
+  if (scannerStream) {
+    scannerStream.getTracks().forEach(t => t.stop());
+    scannerStream = null;
+  }
+}
+</script>
+</body>
+</html>

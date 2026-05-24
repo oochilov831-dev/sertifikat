@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shablonlar — Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">🛡️ Admin Panel</a>
+  <div class="nav-links">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:12px;" id="admin-name"></span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h1 style="font-size:22px; font-weight:800;">Shablonlar boshqaruvi</h1>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Shablon qo'shish</button>
+    </div>
+
+    <div class="cert-grid" id="templates-grid">
+      <div style="grid-column:1/-1; text-align:center; padding:40px;"><div class="spinner" style="margin:auto;"></div></div>
+    </div>
+  </main>
+</div>
+
+<!-- Add template modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Yangi shablon qo'shish</h3>
+      <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
+    </div>
+    <form id="add-form" onsubmit="uploadTemplate(event)">
+      <div class="form-group">
+        <label class="form-label">Shablon nomi *</label>
+        <input type="text" name="name" class="form-control" required placeholder="Masalan: Diplom Klassik">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tavsif</label>
+        <input type="text" name="description" class="form-control" placeholder="Qisqacha tavsif">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Kategoriya</label>
+          <select name="category" class="form-control">
+            <option value="general">Umumiy</option>
+            <option value="diploma">Diplom</option>
+            <option value="award">Mukofot</option>
+            <option value="course">Kurs</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Premium</label>
+          <select name="is_premium" class="form-control">
+            <option value="0">Yo'q (bepul)</option>
+            <option value="1">Ha (premium)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Kenglik (px)</label>
+          <input type="number" name="width" class="form-control" value="1280">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Balandlik (px)</label>
+          <input type="number" name="height" class="form-control" value="960">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shablon rasmi *</label>
+        <input type="file" name="file" class="form-control" accept="image/*" required
+               onchange="previewFile(this)">
+        <img id="preview-img" style="margin-top:8px; max-width:100%; border-radius:8px; display:none;">
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="upload-btn">Yuklash</button>
+    </form>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Shablonni o'chirish</h3>
+      <button class="modal-close" onclick="closeModal('del-modal')">&times;</button>
+    </div>
+    <p style="margin-bottom:24px; color:var(--text-muted);">Bu shablonni o'chirmoqchimisiz?</p>
+    <div style="display:flex; gap:12px; justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal('del-modal')">Bekor</button>
+      <button class="btn btn-danger" id="confirm-del">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (!requireAuth()) throw '';
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!['admin', 'super_admin'].includes(me.role)) { location.href = '/dashboard.html'; throw ''; }
+  document.getElementById('admin-name').textContent = me.name || '';
+
+  let delId = null;
+
+  async function loadTemplates() {
+    const list = await Api.admin.templates();
+    document.getElementById('templates-grid').innerHTML = list.length
+      ? list.map(t => `
+          <div class="cert-card">
+            <div class="cert-preview">
+              <img src="/${t.file_url}" alt="${t.name}">
+              ${t.is_premium ? '<span class="badge badge-gold" style="position:absolute;top:8px;right:8px;">Premium</span>' : ''}
+            </div>
+            <div class="cert-body">
+              <div class="cert-name">${t.name}</div>
+              <div class="cert-meta">${t.category} &bull; ${t.width}×${t.height}px</div>
+              <div class="cert-actions" style="margin-top:12px;">
+                <button class="btn btn-danger btn-sm" onclick="confirmDel(${t.id})">O'chirish</button>
+              </div>
+            </div>
+          </div>`).join('')
+      : '<p style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);">Shablonlar yo\'q</p>';
+  }
+
+  function openAddModal() { document.getElementById('add-modal').classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function previewFile(input) {
+    const img = document.getElementById('preview-img');
+    if (input.files[0]) {
+      img.src = URL.createObjectURL(input.files[0]);
+      img.style.display = '';
+    }
+  }
+
+  async function uploadTemplate(e) {
+    e.preventDefault();
+    const btn  = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.textContent = 'Yuklanmoqda...';
+
+    const form = new FormData(e.target);
+    try {
+      await Api.admin.addTemplate(form);
+      toast('Shablon qo\'shildi');
+      closeModal('add-modal');
+      loadTemplates();
+      e.target.reset();
+      document.getElementById('preview-img').style.display = 'none';
+    } catch(err) { toast(err.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Yuklash'; }
+  }
+
+  function confirmDel(id) {
+    delId = id;
+    document.getElementById('del-modal').classList.add('open');
+  }
+
+  document.getElementById('confirm-del').addEventListener('click', async () => {
+    try {
+      await Api.admin.delTemplate(delId);
+      closeModal('del-modal');
+      toast('Shablon o\'chirildi');
+      loadTemplates();
+    } catch(e) { toast(e.message, 'error'); }
+  });
+
+  loadTemplates();
+</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+</body>
+</html>

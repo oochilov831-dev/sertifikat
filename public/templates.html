@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shablonlar — Sertifikat Tizimi</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+    .hero {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: #fff;
+      padding: 64px 32px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 40px; font-weight: 800; margin-bottom: 12px; }
+    .hero p  { font-size: 18px; opacity: .85; margin-bottom: 32px; }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-white {
+      background: #fff; color: #4f46e5; padding: 12px 28px;
+      border-radius: 8px; font-weight: 700; text-decoration: none;
+      border: none; cursor: pointer; font-size: 15px; transition: all .2s;
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.2); }
+    .btn-ghost {
+      background: transparent; color: #fff; padding: 12px 28px;
+      border-radius: 8px; font-weight: 700; text-decoration: none;
+      border: 2px solid rgba(255,255,255,.5); font-size: 15px; transition: all .2s;
+    }
+    .btn-ghost:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+
+    .filters {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 24px 32px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 8px 18px; border-radius: 999px; border: 2px solid var(--border);
+      background: transparent; cursor: pointer; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); transition: all .2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      border-color: var(--primary); color: var(--primary);
+      background: rgba(79,70,229,.06);
+    }
+    .filter-search {
+      margin-left: auto;
+      padding: 8px 16px; border-radius: 8px; border: 2px solid var(--border);
+      font-size: 14px; color: var(--text); background: var(--bg);
+      width: 220px;
+    }
+    .filter-search:focus { outline: none; border-color: var(--primary); }
+
+    .templates-section { padding: 32px; max-width: 1200px; margin: 0 auto; }
+    .section-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+
+    .tpl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .tpl-card {
+      background: var(--surface); border-radius: 14px;
+      border: 2px solid var(--border); overflow: hidden;
+      transition: all .25s; cursor: pointer;
+    }
+    .tpl-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-6px);
+      box-shadow: 0 16px 32px rgba(79,70,229,.15);
+    }
+    .tpl-thumb {
+      height: 180px; overflow: hidden; position: relative;
+      background: linear-gradient(135deg, #f5f5f0, #e8e4d9);
+    }
+    .tpl-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+    .tpl-card:hover .tpl-thumb img { transform: scale(1.05); }
+    .tpl-thumb-placeholder {
+      width: 100%; height: 100%; display: flex; align-items: center;
+      justify-content: center; font-size: 48px;
+    }
+    .tpl-premium-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: linear-gradient(135deg, #c8a84b, #f0c040);
+      color: #fff; padding: 4px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; letter-spacing: .03em;
+    }
+    .tpl-body { padding: 16px; }
+    .tpl-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .tpl-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+    .tpl-actions { display: flex; gap: 8px; }
+
+    .cta-box {
+      background: linear-gradient(135deg, #f0f0ff, #faf5ff);
+      border: 2px solid #c4b5fd; border-radius: 16px;
+      padding: 40px; text-align: center; margin: 40px 0;
+    }
+    .cta-box h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .cta-box p  { color: var(--text-muted); margin-bottom: 24px; }
+
+    /* Preview modal */
+    .preview-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s;
+      padding: 20px;
+    }
+    .preview-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .preview-modal {
+      background: var(--surface); border-radius: 16px; overflow: hidden;
+      max-width: 800px; width: 100%;
+      transform: scale(.95); transition: transform .2s;
+    }
+    .preview-modal-overlay.open .preview-modal { transform: scale(1); }
+    .preview-modal-img { width: 100%; max-height: 500px; object-fit: contain; background: #f5f5f0; }
+    .preview-modal-body { padding: 24px; }
+    .preview-modal-body h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .preview-modal-footer { display: flex; gap: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="nav-brand">🎓 Sertifikat</a>
+  <div class="nav-links">
+    <a href="/templates.html" class="nav-link active">Shablonlar</a>
+    <a href="/verify.html"    class="nav-link">Tekshirish</a>
+    <div id="nav-auth"></div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>Professional Sertifikat Shablonlari</h1>
+  <p>Tayyor shablonlardan foydalaning yoki o'zingizning dizayningizni yarating</p>
+  <div class="hero-btns">
+    <a href="/login.html" class="btn-white" id="hero-start">Bepul boshlash →</a>
+    <a href="/verify.html" class="btn-ghost">Sertifikat tekshirish</a>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+  <button class="filter-btn active" data-cat="all">Barchasi</button>
+  <button class="filter-btn" data-cat="certificate">⭐ Klassik</button>
+  <button class="filter-btn" data-cat="akademik">🎓 Akademik</button>
+  <button class="filter-btn" data-cat="korporativ">🏢 Korporativ</button>
+  <button class="filter-btn" data-cat="tadbir">🎉 Tadbir</button>
+  <button class="filter-btn" data-cat="sport">🏆 Sport</button>
+  <button class="filter-btn" data-cat="zamonaviy">✨ Zamonaviy</button>
+  <button class="filter-btn" data-cat="diploma">📜 Diplom</button>
+  <button class="filter-btn" data-cat="award">🥇 Mukofot</button>
+  <button class="filter-btn" data-cat="course">📚 Kurs</button>
+  <input type="text" class="filter-search" id="search" placeholder="🔍 Shablon qidirish...">
+</div>
+
+<!-- Templates -->
+<div class="templates-section">
+  <div class="section-title" id="section-title">Barcha shablonlar</div>
+  <div class="tpl-grid" id="tpl-grid">
+    <div style="grid-column:1/-1; text-align:center; padding:60px;">
+      <div class="spinner" style="margin:auto;"></div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box" id="cta-box" style="display:none;">
+    <h2>O'zingizning sertifikatingizni yarating</h2>
+    <p>Ro'yxatdan o'ting va bu shablonlardan foydalanib professional sertifikatlar yarating</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <a href="/login.html" class="btn btn-primary btn-lg">Bepul ro'yxatdan o'tish</a>
+      <a href="/login.html" class="btn btn-outline btn-lg">Kirish</a>
+    </div>
+  </div>
+</div>
+
+<!-- Preview modal -->
+<div class="preview-modal-overlay" id="preview-modal">
+  <div class="preview-modal">
+    <img id="modal-img" class="preview-modal-img" src="" alt="Shablon">
+    <div class="preview-modal-body">
+      <h3 id="modal-name"></h3>
+      <p id="modal-meta" style="color:var(--text-muted); font-size:14px;"></p>
+      <div class="preview-modal-footer">
+        <button class="btn btn-outline" onclick="closePreview()">Yopish</button>
+        <a href="/login.html" class="btn btn-primary" id="modal-use-btn">Bu shablondan foydalanish →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  let allTemplates = [];
+  let activeCategory = 'all';
+  const isLoggedIn = !!localStorage.getItem('token');
+
+  // Nav va hero tugmalarini foydalanuvchi holatiga qarab o'zgartirish
+  if (isLoggedIn) {
+    document.getElementById('nav-auth').innerHTML = `
+      <a href="/dashboard.html" class="btn btn-primary btn-sm">Kabinetga →</a>`;
+    document.getElementById('hero-start').textContent = 'Kabinetga o\'tish →';
+    document.getElementById('hero-start').href = '/dashboard.html';
+    document.getElementById('modal-use-btn').href = '/constructor.html';
+    document.getElementById('modal-use-btn').textContent = 'Konstruktorda ochish →';
+  } else {
+    document.getElementById('nav-auth').innerHTML = `
+      <a href="/login.html" class="nav-link">Kirish</a>
+      <a href="/login.html" class="btn btn-primary btn-sm">Ro'yxatdan o'tish</a>`;
+  }
+
+  // Shablonlarni yuklash (token talab qilinmaydi)
+  async function loadTemplates() {
+    try {
+      const res  = await fetch('/api/templates');
+      const json = await res.json();
+      allTemplates = json.data || [];
+      renderTemplates();
+      if (!isLoggedIn) document.getElementById('cta-box').style.display = '';
+    } catch (e) {
+      document.getElementById('tpl-grid').innerHTML =
+        '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px;">Shablonlar yuklanmadi</p>';
+    }
+  }
+
+  function renderTemplates() {
+    const search = document.getElementById('search').value.toLowerCase();
+
+    let list = allTemplates.filter(t => {
+      const matchCat  = activeCategory === 'all' || t.category === activeCategory;
+      const matchSearch = !search || t.name.toLowerCase().includes(search);
+      return matchCat && matchSearch;
+    });
+
+    const catLabels = { all:'Barcha', general:'Umumiy', diploma:'Diplom', award:'Mukofot', course:'Kurs' };
+    document.getElementById('section-title').textContent =
+      `${catLabels[activeCategory] || 'Barcha'} shablonlar (${list.length} ta)`;
+
+    if (!list.length) {
+      document.getElementById('tpl-grid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);">' +
+        '<div style="font-size:40px;margin-bottom:12px;">🔍</div><p>Shablon topilmadi</p></div>';
+      return;
+    }
+
+    document.getElementById('tpl-grid').innerHTML = list.map(t => `
+      <div class="tpl-card" onclick="openPreview(${t.id})">
+        <div class="tpl-thumb">
+          ${t.preview_url || t.file_url
+            ? `<img src="/${t.preview_url || t.file_url}" alt="${t.name}" loading="lazy">`
+            : `<div class="tpl-thumb-placeholder">🎓</div>`}
+          ${t.is_premium ? '<span class="tpl-premium-badge">⭐ Premium</span>' : ''}
+        </div>
+        <div class="tpl-body">
+          <div class="tpl-name">${t.name}</div>
+          <div class="tpl-meta">${categoryLabel(t.category)} &bull; ${t.width}×${t.height}px</div>
+          <div class="tpl-actions">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPreview(${t.id})">
+              Ko'rish
+            </button>
+            <a href="${isLoggedIn ? '/constructor.html' : '/login.html'}"
+               class="btn btn-primary btn-sm"
+               onclick="event.stopPropagation(); saveSelectedTemplate(${t.id})">
+              ${isLoggedIn ? 'Ishlatish' : 'Kirish kerak'}
+            </a>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function categoryLabel(cat) {
+    return { general:'Umumiy', diploma:'Diplom', award:'Mukofot', course:'Kurs' }[cat] || cat;
+  }
+
+  function saveSelectedTemplate(id) {
+    localStorage.setItem('selected_template', id);
+  }
+
+  function openPreview(id) {
+    const t = allTemplates.find(t => t.id === id);
+    if (!t) return;
+
+    document.getElementById('modal-img').src  = t.preview_url || t.file_url
+      ? '/' + (t.preview_url || t.file_url) : '';
+    document.getElementById('modal-name').textContent = t.name;
+    document.getElementById('modal-meta').textContent =
+      `${categoryLabel(t.category)} · ${t.width}×${t.height}px` +
+      (t.is_premium ? ' · ⭐ Premium' : ' · Bepul');
+
+    const useBtn = document.getElementById('modal-use-btn');
+    useBtn.onclick = () => { saveSelectedTemplate(id); };
+
+    document.getElementById('preview-modal').classList.add('open');
+  }
+
+  function closePreview() {
+    document.getElementById('preview-modal').classList.remove('open');
+  }
+
+  // Kategoriya filterlari
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      renderTemplates();
+    });
+  });
+
+  // Qidiruv
+  let searchTimer;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderTemplates, 300);
+  });
+
+  // Modal tashqarisini bosish
+  document.getElementById('preview-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closePreview();
+  });
+
+  loadTemplates();
+</script>
+<script src="/js/toast.js"></script>
+<script src="/js/bottom-nav.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

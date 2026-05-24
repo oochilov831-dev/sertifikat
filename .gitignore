@@ -1,0 +1,30 @@
+# Composer dependencies
+/vendor/
+/composer.phar
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs and databases
+*.log
+*.sqlite
+
+# Local uploaded/generated certificates (exclude standard templates)
+/public/uploads/certificates/
+/public/uploads/bulk/
+/public/uploads/avatars/
+/public/uploads/logos/
+/public/uploads/seals/
+/public/uploads/signatures/
+/public/uploads/templates/user_*
+/public/uploads/templates/tpl_*
+/public/uploads/test_qr.png
+
+# IDEs and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+sertifikat_hosting_pack.zip

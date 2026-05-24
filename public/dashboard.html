@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kabinet â€” Sertifikat Tizimi</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+    .dashboard-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      margin-bottom: 24px; padding-bottom: 22px; border-bottom: 1px solid var(--border);
+    }
+    .dashboard-title h1 { font-size: 28px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .dashboard-title p { color: var(--text-muted); font-size: 14px; }
+    .quick-actions { display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)); gap: 10px; min-width: 440px; }
+    .quick-action {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+      color: var(--text-2); box-shadow: var(--shadow-sm); transition: border-color .18s, transform .18s, box-shadow .18s;
+    }
+    .quick-action:hover { border-color: var(--primary); color: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .quick-icon {
+      width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+      background: var(--primary-light); color: var(--primary-dark); flex-shrink: 0;
+    }
+    .quick-icon svg { width: 18px; height: 18px; }
+    @media (max-width: 1024px) {
+      .dashboard-head { flex-direction: column; align-items: stretch; }
+      .quick-actions { min-width: 0; }
+    }
+    @media (max-width: 640px) {
+      .dashboard-head { gap: 14px; margin-bottom: 16px; padding-bottom: 16px; }
+      .dashboard-title h1 { font-size: 22px; }
+      .quick-actions { grid-template-columns: repeat(3, minmax(98px, 1fr)); min-width: 0; gap: 8px; }
+      .quick-action { flex-direction: column; align-items: flex-start; padding: 10px; font-size: 12px; }
+      .quick-icon { width: 30px; height: 30px; }
+      .doc-toolbar { width: 100%; display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+      .doc-toolbar .form-control { width: 100% !important; }
+      .doc-toolbar .btn { width: 100%; }
+      #sub-info > div { align-items: flex-start !important; flex-direction: column; grid-template-columns: 1fr !important; gap: 10px !important; padding: 14px !important; }
+      #sub-info .btn { width: 100%; margin-left: 0 !important; }
+      #select-bar { align-items: stretch !important; }
+      #select-bar > div { width: 100%; flex-wrap: wrap; }
+    }
+    @media (max-width: 420px) {
+      .quick-actions { grid-template-columns: 1fr; }
+      .quick-action { flex-direction: row; align-items: center; }
+      .doc-toolbar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/dashboard.html" class="nav-brand">🎓 Sertifikat</a>
+  <div class="nav-links">
+    <a href="/dashboard.html"  class="nav-link active">Kabinet</a>
+    <a href="/constructor.html" class="nav-link">Yaratish</a>
+    <a href="/plans.html"      class="nav-link">Tariflar</a>
+    <a href="/profile.html"    class="nav-link">Profil</a>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <section class="dashboard-head">
+      <div class="dashboard-title">
+        <h1 data-i18n="dash_title">Hujjatlar paneli</h1>
+        <p data-i18n="dash_sub">Sertifikat, diplom va yorliqlarni boshqarish</p>
+      </div>
+      <div class="quick-actions">
+        <a href="/constructor.html" class="quick-action">
+          <span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg></span>
+          <strong data-i18n="dash_quick_new">Yangi hujjat</strong>
+        </a>
+        <a href="/bulk.html" class="quick-action">
+          <span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h10M7 17h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg></span>
+          <strong data-i18n="dash_quick_import">Ommaviy import</strong>
+        </a>
+        <a href="/verify.html" class="quick-action">
+          <span class="quick-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-5M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg></span>
+          <strong data-i18n="dash_quick_verify">Tekshirish</strong>
+        </a>
+      </div>
+    </section>
+
+    <!-- Subscription info -->
+    <div id="sub-info" style="margin-bottom:24px;"></div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Certificates -->
+    <div class="card" style="margin-top:0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <h2 style="font-size:18px; font-weight:700;">Mening Hujjatlarim</h2>
+        <div class="doc-toolbar" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <select id="filter-type" class="form-control" style="width:180px; padding:8px 14px;" onchange="page=1; loadCerts();">
+            <option value="">Barcha turlari</option>
+            <option value="certificate">ðŸŽ“ Sertifikat</option>
+            <option value="diploma">ðŸ“œ Diplom</option>
+            <option value="gratitude">ðŸ¤ Tashakkurnoma</option>
+            <option value="honor">ðŸ… Faxriy yorliq</option>
+            <option value="commendation">ðŸŒŸ Maqtov yorlig'i</option>
+          </select>
+          <input type="text" id="search" class="form-control" placeholder="Qidirish..." style="width:200px; padding:8px 14px;">
+          <a href="/constructor.html" class="btn btn-primary btn-sm">+ Yangi</a>
+        </div>
+      </div>
+
+      <!-- Tanlash paneli -->
+      <div id="select-bar" style="display:none; background:linear-gradient(135deg,#eef2ff,#f5f3ff); border:1px solid #c7d2fe; border-radius:12px; padding:12px 16px; margin-bottom:16px; display:none; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:#4338ca;">
+          <strong id="sel-count">0</strong> ta tanlandi
+          <button onclick="selectAll(true)" style="background:none;border:none;color:#6366f1;cursor:pointer;font-size:13px;font-weight:600;text-decoration:underline;">Hammasini tanlash</button>
+          <button onclick="selectAll(false)" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;">Bekor qilish</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="bulkDownload('pdf')">ðŸ“¥ PDF (ZIP)</button>
+          <button class="btn btn-outline btn-sm" onclick="bulkDownload('png')">ðŸ–¼ PNG (ZIP)</button>
+        </div>
+      </div>
+
+      <div id="cert-list">
+        <div style="text-align:center; padding:60px;"><div class="spinner" style="margin:auto;"></div></div>
+      </div>
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Delete modal -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Sertifikatni o'chirish</h3>
+      <button class="modal-close" onclick="closeModal('delete-modal')">&times;</button>
+    </div>
+    <p style="margin-bottom:24px; color:var(--text-muted);">
+      Bu sertifikatni o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal('delete-modal')">Bekor qilish</button>
+      <button class="btn btn-danger" id="confirm-delete">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/doc-types.js"></script>
+<script>
+  if (!requireAuth()) throw '';
+
+  let page = 1, totalPages = 1, deleteId = null;
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  async function init() {
+    try {
+      const data = await Api.auth.me();
+      renderSubInfo(data.subscription);
+      await loadCerts();
+    } catch (e) {
+      if (e.status === 401) logout();
+    }
+  }
+
+  function renderSubInfo(sub) {
+    if (!sub) return;
+    const limit = Number(sub.cert_limit);
+    const used = Number(sub.cert_used || 0);
+    const isUnlimited = limit === -1;
+    const left = isUnlimited ? 'Cheksiz' : Math.max(0, limit - used).toLocaleString();
+    const limitText = isUnlimited ? 'Cheksiz' : limit.toLocaleString();
+    const usedText = used.toLocaleString();
+    const pct = isUnlimited || limit <= 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
+    const plan = fmt.plan(sub.plan);
+    const exp  = sub.expires_at ? fmt.date(sub.expires_at) : 'Muddatsiz';
+    const cls  = sub.plan === 'pro' ? 'badge-gold' : sub.plan === 'standard' ? 'badge-primary' : 'badge-warning';
+
+    document.getElementById('sub-info').innerHTML = `
+      <div style="display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:20px; padding:20px 24px;
+                  background:rgba(255, 255, 255, 0.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                  border-radius:var(--radius-lg); border:1px solid rgba(226, 232, 240, 0.8); box-shadow: var(--shadow);">
+        <span class="badge ${cls}" style="font-size:13px; padding:8px 18px; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-weight:700;">${plan}</span>
+        <div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--text-2);margin-bottom:8px;">
+            <span>Yaratilgan: <strong style="color:var(--primary); font-weight:700;">${usedText}</strong> / <strong>${limitText}</strong></span>
+            <span>Qolgan limit: <strong style="color:#10b981; font-weight:700;">${left}</strong></span>
+          </div>
+          <div style="height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.08);">
+            <div style="height:100%;width:${isUnlimited ? 100 : pct}%;background:linear-gradient(90deg,#10b981,#6366f1);border-radius:999px;box-shadow: 0 1px 2px rgba(0,0,0,0.15);"></div>
+          </div>
+          <div style="font-size:12px;color:var(--text-soft);margin-top:6px;font-weight:500;">Tarif tugash muddati: <strong style="color:var(--text);">${exp}</strong></div>
+        </div>
+        <a href="/plans.html" class="btn btn-primary btn-sm" style="margin-left:auto; border-radius:10px;">Yangilash</a>
+      </div>`;
+
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card" style="position:relative; overflow:hidden;">
+        <div class="stat-icon" style="background:rgba(99,102,241,0.08); color:#4f46e5;">📊</div>
+        <div>
+          <div class="stat-value" id="total-certs">—</div>
+          <div class="stat-label">Jami sertifikatlar</div>
+        </div>
+      </div>
+      <div class="stat-card" style="position:relative; overflow:hidden;">
+        <div class="stat-icon" style="background:rgba(16,185,129,0.08); color:#10b981;">⏳</div>
+        <div>
+          <div class="stat-value">${left}</div>
+          <div class="stat-label">Qolgan limit</div>
+        </div>
+      </div>
+      <div class="stat-card" style="position:relative; overflow:hidden;">
+        <div class="stat-icon" style="background:rgba(14,165,233,0.08); color:#0ea5e9;">📈</div>
+        <div>
+          <div class="stat-value">${usedText}/${limitText}</div>
+          <div class="stat-label">Ishlatilgan limit</div>
+        </div>
+      </div>
+      <div class="stat-card" style="position:relative; overflow:hidden;">
+        <div class="stat-icon" style="background:rgba(245,158,11,0.08); color:#d97706;">💎</div>
+        <div>
+          <div class="stat-value">${plan}</div>
+          <div class="stat-label">Tarif rejasi</div>
+        </div>
+      </div>`;
+  }
+
+  async function loadCerts() {
+    const search   = document.getElementById('search').value;
+    const filterEl = document.getElementById('filter-type');
+    const docType  = filterEl ? filterEl.value : '';
+    const data     = await Api.certs.list(page, search, docType);
+
+    totalPages = data.total_pages;
+    if (data.total !== undefined) {
+      const el = document.getElementById('total-certs');
+      if (el) el.textContent = data.total;
+    }
+
+    if (!data.items.length) {
+      document.getElementById('cert-list').innerHTML = `
+        <div style="text-align:center; padding:60px; color:var(--text-soft); background:var(--surface); border-radius:var(--radius-lg); border:1px dashed var(--border-strong);">
+          <div style="font-size:48px; margin-bottom:16px; animation: floatAnim 4s ease-in-out infinite;">📜</div>
+          <p style="font-size:16px; font-weight:600; color:var(--text-2);">Hozircha hech qanday hujjat yaratilmagan</p>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">Ilk professional sertifikatingizni yaratish uchun quyidagi tugmani bosing</p>
+          <a href="/constructor.html" class="btn btn-primary" style="margin-top:20px; border-radius:10px;">+ Yangi sertifikat yaratish</a>
+        </div>`;
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    document.getElementById('cert-list').innerHTML = `
+      <div class="cert-grid">
+        ${data.items.map(c => `
+          <div class="cert-card" data-id="${c.id}" style="border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow-sm); overflow:hidden; transition:all 0.25s var(--ease); background:var(--surface);">
+            <div class="cert-preview" style="position:relative; aspect-ratio:4/3; background:linear-gradient(135deg,#f8fafc,#f1f5f9); display:flex; align-items:center; justify-content:center; overflow:hidden; border-bottom:1px solid var(--border);">
+              <label class="cert-check" style="position:absolute;top:10px;right:10px;z-index:2;width:28px;height:28px;background:rgba(255,255,255,0.95);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.1); border:1px solid rgba(0,0,0,0.05); transition:transform 0.15s;">
+                <input type="checkbox" data-cert-id="${c.id}" onchange="toggleSelect(${c.id}, this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:#6366f1;">
+              </label>
+              ${c.file_png
+                ? `<img src="/${c.file_png}" alt="Sertifikat" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s;">`
+                : `<div style="font-size:48px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.05));">🎓</div>`}
+              ${c.watermark ? '<span class="badge badge-warning" style="position:absolute;top:10px;left:10px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">Bepul</span>' : ''}
+            </div>
+            <div class="cert-body" style="padding:16px;">
+              <div style="margin-bottom:8px;">${docTypeBadge(c.doc_type || 'certificate')}</div>
+              <div class="cert-name" style="font-size:15px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.recipient_name}</div>
+              <div class="cert-meta" style="font-size:12px; color:var(--text-soft); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${c.course_name || '—'}</div>
+              <div class="cert-meta" style="margin-top:6px; display:flex; align-items:center; justify-content:between; width:100%;">
+                <small style="color:var(--text-muted); font-weight:500;">${fmt.date(c.issued_date)}</small>
+                <small class="badge badge-primary" style="padding:2px 8px; margin-left:auto; border-radius:6px; font-family:monospace; font-size:10px;">${c.cert_id}</small>
+              </div>
+              <div class="cert-actions" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:14px;">
+                ${c.file_pdf ? `<a href="/${c.file_pdf}" target="_blank" class="btn btn-outline btn-sm" style="padding:6px 2px; font-size:11px; font-weight:700; border-radius:8px; text-align:center;">PDF</a>` : '<span style="display:none"></span>'}
+                ${c.file_png ? `<a href="/${c.file_png}" target="_blank" class="btn btn-outline btn-sm" style="padding:6px 2px; font-size:11px; font-weight:700; border-radius:8px; text-align:center;">PNG</a>` : '<span style="display:none"></span>'}
+                <a href="/verify.html?id=${c.cert_id}" target="_blank" class="btn btn-outline btn-sm" style="padding:6px 2px; font-size:11px; font-weight:700; border-radius:8px; text-align:center; ${(!c.file_pdf || !c.file_png) ? 'grid-column: span 2' : ''}">QR</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteCert(${c.id})" style="padding:6px 2px; font-size:11px; font-weight:700; border-radius:8px;">O'ch</button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+
+    renderPagination();
+  }
+
+  function renderPagination() {
+    if (totalPages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+    let html = '';
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    document.getElementById('pagination').innerHTML = html;
+  }
+
+  function goPage(p) { page = p; loadCerts(); }
+
+  function deleteCert(id) {
+    deleteId = id;
+    document.getElementById('delete-modal').classList.add('open');
+  }
+
+  // â”€â”€ Bulk tanlash â”€â”€
+  const SELECTED = new Set();
+  function toggleSelect(id, checked) {
+    if (checked) SELECTED.add(id); else SELECTED.delete(id);
+    updateSelectBar();
+  }
+  function selectAll(state) {
+    document.querySelectorAll('input[data-cert-id]').forEach(cb => {
+      const id = parseInt(cb.dataset.certId, 10);
+      cb.checked = state;
+      if (state) SELECTED.add(id); else SELECTED.delete(id);
+    });
+    updateSelectBar();
+  }
+  function updateSelectBar() {
+    const bar = document.getElementById('select-bar');
+    if (SELECTED.size > 0) {
+      bar.style.display = 'flex';
+      document.getElementById('sel-count').textContent = SELECTED.size;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+  async function bulkDownload(format) {
+    if (SELECTED.size === 0) {
+      window.Toast?.warning('Hech qaysi sertifikat tanlanmagan');
+      return;
+    }
+    window.Toast?.info(`${SELECTED.size} ta sertifikat ZIP qilinmoqda...`);
+
+    try {
+      const r = await fetch('/api/certificates/bulk-download', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('token'),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: [...SELECTED], format }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error(e.message || 'Yuklab olish xatosi');
+      }
+      const blob = await r.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `sertifikatlar_${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      window.Toast?.success('ZIP yuklab olindi');
+    } catch (err) {
+      window.Toast?.error(err.message);
+    }
+  }
+
+  document.getElementById('confirm-delete').addEventListener('click', async () => {
+    if (!deleteId) return;
+    try {
+      await Api.certs.delete(deleteId);
+      closeModal('delete-modal');
+      toast('Sertifikat o\'chirildi');
+      loadCerts();
+    } catch(e) { toast(e.message, 'error'); }
+  });
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  let searchTimer;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { page = 1; loadCerts(); }, 400);
+  });
+
+  init();
+</script>
+<script src="/js/toast.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/dashboard-sidebar.js"></script>
+<script src="/js/bottom-nav.js"></script>
+<script src="/js/pwa.js"></script>
+</body>
+</html>

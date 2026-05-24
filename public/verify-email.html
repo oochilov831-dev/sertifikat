@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email tasdiqlash — Sertifikat Tizimi</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body { background: linear-gradient(135deg, #6366f1, #8b5cf6); min-height: 100vh; padding: 20px; }
+    .wrap { max-width: 460px; margin: 60px auto; }
+    .card { background: #fff; border-radius: 20px; padding: 40px 32px; box-shadow: 0 20px 60px rgba(0,0,0,.2); text-align: center; }
+    .ico { width: 72px; height: 72px; border-radius: 50%; background: #eef2ff; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #0f172a; }
+    p  { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
+    .code-input {
+      width: 100%; max-width: 280px; margin: 0 auto 18px;
+      display: flex; gap: 8px; justify-content: center;
+    }
+    .code-input input {
+      width: 44px; height: 56px; text-align: center;
+      font: 700 24px monospace;
+      border: 2px solid #e2e8f0; border-radius: 12px;
+      color: #6366f1; background: #f8fafc;
+      transition: all .15s;
+    }
+    .code-input input:focus { outline: none; border-color: #6366f1; background: #fff; }
+    .btn-go { display: inline-block; background: #6366f1; color: #fff; border: none; padding: 14px 32px; border-radius: 12px; font: 700 15px inherit; cursor: pointer; width: 100%; max-width: 280px; }
+    .btn-go:hover { background: #4f46e5; }
+    .btn-go:disabled { opacity: .5; cursor: not-allowed; }
+    .resend { margin-top: 18px; font-size: 13px; color: #64748b; }
+    .resend a { color: #6366f1; text-decoration: none; font-weight: 600; cursor: pointer; }
+    .resend a:hover { text-decoration: underline; }
+    .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+    .alert-success { background: #dcfce7; color: #15803d; }
+    .alert-error   { background: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="card">
+    <div class="ico">📧</div>
+    <h1>Emailingizni tasdiqlang</h1>
+    <p>Sizning emailingizga 6 raqamli tasdiqlash kodi yuborildi. Quyida kodni kiriting:</p>
+
+    <div id="alert" style="display:none;"></div>
+
+    <div class="code-input">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    </div>
+
+    <button class="btn-go" id="submit-btn" onclick="verify()">Tasdiqlash</button>
+
+    <div class="resend">
+      Kod kelmadimi? <a id="resend-link" onclick="resend()">Qayta yuborish</a>
+      <div id="cooldown" style="margin-top:6px;color:#94a3b8;display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/toast.js"></script>
+<script>
+  requireAuth();
+
+  const inputs = document.querySelectorAll('.code-input input');
+
+  // Auto-jump va paste qo'llab-quvvatlash
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v;
+      if (v && i < inputs.length - 1) inputs[i + 1].focus();
+      checkComplete();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) inputs[i - 1].focus();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      txt.split('').forEach((ch, j) => { if (inputs[j]) inputs[j].value = ch; });
+      if (txt.length === 6) verify();
+    });
+  });
+  inputs[0].focus();
+
+  function getCode() { return Array.from(inputs).map(i => i.value).join(''); }
+  function checkComplete() {
+    const code = getCode();
+    if (code.length === 6) verify();
+  }
+
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('alert');
+    el.className = 'alert alert-' + type;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function verify() {
+    const code = getCode();
+    if (code.length !== 6) return;
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Tasdiqlanmoqda...';
+
+    try {
+      await Api.post('/auth/verify-email', { code });
+      showAlert('✓ Email muvaffaqiyatli tasdiqlandi!', 'success');
+      window.Toast?.success('Email tasdiqlandi');
+      setTimeout(() => location.href = '/dashboard.html', 1200);
+    } catch (e) {
+      showAlert(e.message);
+      btn.disabled = false;
+      btn.textContent = 'Tasdiqlash';
+      inputs.forEach(i => i.value = '');
+      inputs[0].focus();
+    }
+  }
+
+  let cooldown = 0;
+  async function resend() {
+    if (cooldown > 0) return;
+    try {
+      await Api.post('/auth/resend-verification', {});
+      showAlert('✓ Yangi kod yuborildi', 'success');
+      cooldown = 60;
+      tick();
+    } catch (e) {
+      showAlert(e.message);
+    }
+  }
+  function tick() {
+    const link = document.getElementById('resend-link');
+    const cd   = document.getElementById('cooldown');
+    if (cooldown > 0) {
+      link.style.pointerEvents = 'none';
+      link.style.opacity = '.4';
+      cd.style.display = 'block';
+      cd.textContent = `Qayta yuborish: ${cooldown}s`;
+      cooldown--;
+      setTimeout(tick, 1000);
+    } else {
+      link.style.pointerEvents = 'auto';
+      link.style.opacity = '1';
+      cd.style.display = 'none';
+    }
+  }
+</script>
+</body>
+</html>

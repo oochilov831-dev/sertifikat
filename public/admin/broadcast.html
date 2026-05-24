@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Broadcast — Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .grid2 { display:grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+    @media(max-width:900px) { .grid2 { grid-template-columns: 1fr; } }
+    .editor { min-height: 260px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font: 14px/1.6 inherit; resize: vertical; }
+    .preview { background: #f8fafc; border: 1px dashed var(--border); border-radius: 12px; padding: 20px; min-height: 240px; }
+    .bc-card { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px; }
+    .form-group label { display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:6px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">🛡️ Admin Panel</a>
+  <div class="nav-links">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:12px;" id="admin-name"></span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <h1 style="font-size:22px;font-weight:800;margin-bottom:24px;">📨 Email Broadcast</h1>
+
+    <div class="grid2">
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;">Yangi xat</h3>
+        <div class="form-group">
+          <label>Sarlavha (subject)</label>
+          <input id="f-subject" class="form-control" placeholder="Yangi imkoniyatlar haqida xabar">
+        </div>
+        <div class="form-group">
+          <label>Xat matni (HTML)</label>
+          <textarea id="f-body" class="editor" placeholder="Salom {{name}}!&#10;&#10;Yangiliklar..."></textarea>
+          <small style="color:var(--text-soft);">Placeholder'lar: <code>{{name}}</code>, <code>{{email}}</code></small>
+        </div>
+        <div class="form-group">
+          <label>Faqat ushbu tarifdagilar (ixtiyoriy)</label>
+          <select id="f-plan" class="form-control">
+            <option value="">Barchaga</option>
+            <option value="free">Bepul</option>
+            <option value="standard">Standart</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="f-verified"> Faqat tasdiqlangan email'lar</label>
+        </div>
+        <button class="btn btn-outline btn-full" onclick="previewMail()" style="margin-bottom:8px;">👁 Preview</button>
+        <button class="btn btn-primary btn-full" onclick="saveDraft()">💾 Saqlash (draft)</button>
+      </div>
+
+      <div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:14px;">📋 Preview / Tarix</h3>
+        <div id="preview-box" class="preview" style="margin-bottom:16px;">
+          <em style="color:var(--text-soft);">Preview tugmasini bosing</em>
+        </div>
+
+        <h4 style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;">Tarix</h4>
+        <div id="bc-list">
+          <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:13px;">Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/toast.js"></script>
+<script>
+  requireAuth();
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!['admin', 'super_admin'].includes(me.role)) { location.href = '/dashboard.html'; throw ''; }
+  document.getElementById('admin-name').textContent = me.name || '';
+
+  async function loadList() {
+    try {
+      const d = await Api.get('/admin/broadcasts');
+      const el = document.getElementById('bc-list');
+      if (!d.items.length) {
+        el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);">Hech qanday broadcast yo\'q</div>';
+        return;
+      }
+      el.innerHTML = d.items.map(b => {
+        const isDraft = b.status === 'draft';
+        const statusBadge = isDraft
+          ? '<span class="badge badge-warning">draft</span>'
+          : `<span class="badge badge-success">yuborilgan: ${b.sent_count}</span>`;
+        return `
+          <div class="bc-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;margin-bottom:4px;">${esc(b.subject)}</div>
+                <div style="font-size:12px;color:var(--text-muted);">${statusBadge} &middot; ${new Date(b.created_at).toLocaleString('uz-UZ')}</div>
+              </div>
+              ${isDraft
+                ? `<button class="btn btn-primary btn-sm" onclick="sendBc(${b.id})">📤 Yuborish</button>`
+                : ''}
+              <button class="btn btn-outline btn-sm" onclick="delBc(${b.id})" style="color:#ef4444;">🗑</button>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  function previewMail() {
+    const body = document.getElementById('f-body').value;
+    const personalized = body.replace(/\{\{name\}\}/g, 'Test Foydalanuvchi').replace(/\{\{email\}\}/g, 'test@example.com');
+    document.getElementById('preview-box').innerHTML = personalized || '<em>Bo\'sh</em>';
+  }
+
+  async function saveDraft() {
+    const data = {
+      subject: document.getElementById('f-subject').value.trim(),
+      body_html: document.getElementById('f-body').value.trim(),
+      filter_plan: document.getElementById('f-plan').value || null,
+      filter_verified: document.getElementById('f-verified').checked || null,
+    };
+    if (!data.subject || !data.body_html) {
+      return window.Toast?.error('Subject va matn kiriting');
+    }
+    try {
+      await Api.post('/admin/broadcasts', data);
+      window.Toast?.success('Saqlandi');
+      document.getElementById('f-subject').value = '';
+      document.getElementById('f-body').value = '';
+      loadList();
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  async function sendBc(id) {
+    if (!confirm('Haqiqatan ham yuborilsinmi? Bu amalni qaytarib bo\'lmaydi.')) return;
+    try {
+      const d = await Api.post(`/admin/broadcasts/${id}/send`, {});
+      window.Toast?.success(`Yuborildi: ${d.sent} / ${d.total}`);
+      loadList();
+    } catch (e) {
+      window.Toast?.error(e.message);
+    }
+  }
+
+  async function delBc(id) {
+    if (!confirm("O'chirilsinmi?")) return;
+    try { await Api.delete('/admin/broadcasts/' + id); loadList(); }
+    catch (e) { window.Toast?.error(e.message); }
+  }
+
+  function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  loadList();
+</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+</body>
+</html>

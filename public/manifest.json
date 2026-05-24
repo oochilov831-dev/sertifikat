@@ -1,0 +1,44 @@
+{
+  "name": "Sertifikat Tizimi",
+  "short_name": "Sertifikat",
+  "description": "Professional raqamli sertifikatlar yarating, QR kod orqali tekshiring va ulashing.",
+  "start_url": "/dashboard.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f7fb",
+  "theme_color": "#6366f1",
+  "lang": "uz",
+  "dir": "ltr",
+  "categories": ["productivity", "business", "education"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Yangi sertifikat",
+      "short_name": "Yaratish",
+      "description": "Yangi sertifikat yaratish",
+      "url": "/constructor.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tekshirish",
+      "short_name": "Tekshir",
+      "description": "Sertifikatni tekshirish",
+      "url": "/verify.html",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

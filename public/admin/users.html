@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foydalanuvchilar — Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    @keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/admin/index.html" class="nav-brand">🛡️ Admin Panel</a>
+  <div class="nav-links">
+    <span style="font-size:13px;color:var(--text-muted);margin-right:12px;" id="admin-name"></span>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Chiqish</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar"></aside>
+
+  <main class="main">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h1 style="font-size:22px; font-weight:800;">Foydalanuvchilar</h1>
+      <input type="text" class="form-control" id="search" placeholder="Qidirish..." style="width:240px;">
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Ism</th>
+            <th>Email / Telefon</th>
+            <th>Tarif / Limit</th>
+            <th>Holat</th>
+            <th>Ro'yxat sanasi</th>
+            <th>Amallar</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="7" style="text-align:center; padding:40px;"><div class="spinner" style="margin:auto;"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="pagination" class="pagination"></div>
+  </main>
+</div>
+
+<!-- Sub modal -->
+<div class="modal-overlay" id="sub-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Obunani boshqarish</h3>
+      <button class="modal-close" onclick="closeModal('sub-modal')">&times;</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tarif rejasi</label>
+      <select class="form-control" id="sub-plan">
+        <option value="free">Bepul</option>
+        <option value="standard">Standart</option>
+        <option value="pro">Pro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Muddat (oy)</label>
+      <input type="number" class="form-control" id="sub-months" value="1" min="1" max="24">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sertifikat limiti (-1 = cheksiz)</label>
+      <input type="number" class="form-control" id="sub-limit" value="5" min="-1">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveSub()">Saqlash</button>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  if (!requireAuth()) throw '';
+  const me = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!['admin', 'super_admin'].includes(me.role)) { location.href = '/dashboard.html'; throw ''; }
+  document.getElementById('admin-name').textContent = me.name || '';
+
+  let page = 1, totalPages = 1, subUserId = null;
+
+  async function loadUsers() {
+    const q    = document.getElementById('search').value;
+    const data = await Api.admin.users(page, q);
+    totalPages = data.total_pages;
+
+    document.getElementById('users-tbody').innerHTML = data.items.map(u => `
+      <tr>
+        <td style="font-family:monospace; color:var(--text-muted);">#${u.id}</td>
+        <td>
+          <strong>${u.name}</strong>
+          ${['admin', 'super_admin'].includes(u.role) ? '<span class="badge badge-danger" style="margin-left:6px;">Admin</span>' : ''}
+        </td>
+        <td style="font-size:13px;">${u.email || u.phone || '—'}</td>
+        <td>
+          <span class="badge ${u.subscription?.plan === 'pro' ? 'badge-gold' : u.subscription?.plan === 'standard' ? 'badge-primary' : 'badge-warning'}">
+            ${fmt.plan(u.subscription?.plan || 'free')}
+          </span>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+            ${limitText(u.subscription)}
+          </div>
+        </td>
+        <td>
+          <span class="badge ${u.is_active ? 'badge-success' : 'badge-danger'}">
+            ${u.is_active ? 'Faol' : 'Bloklangan'}
+          </span>
+        </td>
+        <td style="font-size:13px;">${fmt.date(u.created_at)}</td>
+        <td>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-outline btn-sm" onclick="openSubModal(${u.id}, '${u.subscription?.plan || 'free'}', ${u.subscription?.cert_limit ?? 5})">Obuna</button>
+            <button class="btn ${u.is_active ? 'btn-danger' : 'btn-outline'} btn-sm" onclick="blockUser(${u.id}, this)">
+              ${u.is_active ? 'Blok' : 'Faol'}
+            </button>
+          </div>
+        </td>
+      </tr>`).join('') || `<tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">Foydalanuvchilar topilmadi</td></tr>`;
+
+    let pages = '';
+    for (let i = 1; i <= totalPages; i++)
+      pages += `<button class="page-btn ${i===page?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    document.getElementById('pagination').innerHTML = pages;
+  }
+
+  async function blockUser(id, btn) {
+    try {
+      const res = await Api.admin.block(id);
+      toast(res.message || 'Yangilandi');
+      loadUsers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  function limitText(sub) {
+    if (!sub) return '0 / 5';
+    const used = Number(sub.cert_used || 0).toLocaleString();
+    const limit = Number(sub.cert_limit) === -1 ? 'Cheksiz' : Number(sub.cert_limit || 0).toLocaleString();
+    return `${used} / ${limit}`;
+  }
+
+  function openSubModal(id, plan = 'free', limit = 5) {
+    subUserId = id;
+    document.getElementById('sub-plan').value = plan;
+    document.getElementById('sub-limit').value = limit;
+    document.getElementById('sub-modal').classList.add('open');
+  }
+
+  async function saveSub() {
+    try {
+      await Api.admin.sub(subUserId, {
+        plan:   document.getElementById('sub-plan').value,
+        months: parseInt(document.getElementById('sub-months').value),
+        cert_limit: parseInt(document.getElementById('sub-limit').value),
+      });
+      closeModal('sub-modal');
+      toast('Obuna yangilandi');
+      loadUsers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function goPage(p)       { page = p; loadUsers(); }
+
+  let t;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { page = 1; loadUsers(); }, 400);
+  });
+
+  loadUsers();
+</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/admin-sidebar.js"></script>
+</body>
+</html>
