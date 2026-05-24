@@ -1509,9 +1509,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else {
     renderAll();
     pushHistory();
-    setTimeout(() => {
-      document.getElementById('welcome-modal').style.display = 'flex';
-    }, 250);
+    
+    // URL orqali kelgan hujjat turini tekshirish va oldindan tanlash (welcome modalni chetlab o'tish)
+    const urlDocType = new URLSearchParams(location.search).get('doc_type');
+    if (urlDocType) {
+      const doctypeSelect = document.getElementById('d-doctype');
+      if (doctypeSelect) {
+        doctypeSelect.value = urlDocType;
+        doctypeSelect.dispatchEvent(new Event('change'));
+      }
+      renderAll();
+      const label = doctypeSelect.options[doctypeSelect.selectedIndex].text.replace(/^[^\s]+\s+/, '');
+      showToast("Yangi " + label + " yaratilmoqda. Boshlash uchun shablon tanlang!", "success");
+    } else {
+      setTimeout(() => {
+        document.getElementById('welcome-modal').style.display = 'flex';
+      }, 250);
+    }
   }
 });
 
