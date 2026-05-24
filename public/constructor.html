@@ -1168,10 +1168,19 @@
         </div>
       </div>
       
-      <!-- Umumiy kenglik sozlamasi -->
-      <div class="prop-group" id="prop-width-group">
-        <label class="prop-label">Maydon kengligi (Eni - px)</label>
-        <input class="prop-input" id="p-width" type="number" min="40" oninput="updateProp('w',+this.value)">
+      <!-- O'lcham sozlamalari (Gorizontal va Vertikal) -->
+      <div class="prop-group" id="prop-size-group">
+        <label class="prop-label">O'lchamlari (Eni va Bo'yi - px)</label>
+        <div class="prop-row">
+          <div class="prop-row-input" style="flex: 1;">
+            <input class="prop-input" id="p-width" type="number" min="20" placeholder="Eni" oninput="updateProp('w',+this.value)" style="padding-right: 28px;">
+            <span class="prop-unit" style="right: 8px;">W</span>
+          </div>
+          <div class="prop-row-input" style="flex: 1;">
+            <input class="prop-input" id="p-height" type="number" min="20" placeholder="Bo'yi" oninput="updateProp('h',+this.value)" style="padding-right: 28px;">
+            <span class="prop-unit" style="right: 8px;">H</span>
+          </div>
+        </div>
       </div>
       
       <button class="tbtn tbtn-danger btn-full" onclick="deleteSelected()" style="margin-top:20px;">🗑️ Maydonni o'chirish</button>
@@ -1627,6 +1636,7 @@ function syncPropsPanel() {
       document.getElementById('al-'+a).classList.toggle('active', f.align===a));
   }
   document.getElementById('p-width').value    = Math.round(f.w || 400);
+  document.getElementById('p-height').value   = Math.round(f.h || 60);
   renderFieldList();
 }
 
