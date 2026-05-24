@@ -1373,6 +1373,51 @@
   </div>
 </div>
 
+<!-- Welcome / Select Document Type Modal -->
+<div id="welcome-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-card" style="max-width: 600px;">
+    <div class="modal-header" style="border-bottom: none; padding-bottom: 0; justify-content: center;">
+      <h2 style="font-size: 22px; flex-direction: column; gap: 4px; text-align: center; font-family: 'Outfit', sans-serif;">
+        <span>✨ Yangi Hujjat Yaratish</span>
+      </h2>
+    </div>
+    <div class="modal-body" style="padding-top: 10px;">
+      <p class="modal-subtitle" style="text-align: center; margin-bottom: 24px; font-size: 14px;">Boshlash uchun yaratmoqchi bo'lgan hujjat turini tanlang:</p>
+      
+      <!-- Doctype Selection Card Grid (Large, premium cards) -->
+      <div class="doctype-grid" style="grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 0;">
+        <div class="doctype-card" onclick="startNewDocument('certificate')" style="padding: 24px 16px; border-radius: 16px;">
+          <span class="dc-icon" style="font-size: 40px; margin-bottom: 4px;">🎓</span>
+          <span class="dc-label" style="font-size: 13px;">Sertifikat</span>
+          <span style="font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 500;">Kurslar va tadbirlar uchun</span>
+        </div>
+        <div class="doctype-card" onclick="startNewDocument('diploma')" style="padding: 24px 16px; border-radius: 16px;">
+          <span class="dc-icon" style="font-size: 40px; margin-bottom: 4px;">📜</span>
+          <span class="dc-label" style="font-size: 13px;">Diplom</span>
+          <span style="font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 500;">Bitiruvchilar va yo'nalishlar uchun</span>
+        </div>
+        <div class="doctype-card" onclick="startNewDocument('gratitude')" style="padding: 24px 16px; border-radius: 16px;">
+          <span class="dc-icon" style="font-size: 40px; margin-bottom: 4px;">🤝</span>
+          <span class="dc-label" style="font-size: 13px;">Tashakkurnoma</span>
+          <span style="font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 500;">Minnatdorchilik va rahmatnomalar</span>
+        </div>
+        <div class="doctype-card" onclick="startNewDocument('honor')" style="padding: 24px 16px; border-radius: 16px;">
+          <span class="dc-icon" style="font-size: 40px; margin-bottom: 4px;">🏆</span>
+          <span class="dc-label" style="font-size: 13px;">Faxriy yorliq</span>
+          <span style="font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 500;">Yutuqlar va maxsus xizmatlar uchun</span>
+        </div>
+        <div class="doctype-card" onclick="startNewDocument('commendation')" style="grid-column: span 2; padding: 20px 16px; border-radius: 16px; flex-direction: row; gap: 14px;">
+          <span class="dc-icon" style="font-size: 32px;">🌟</span>
+          <div style="text-align: left; display: flex; flex-direction: column;">
+            <span class="dc-label" style="font-size: 13px;">Maqtov yorlig'i</span>
+            <span style="font-size: 10px; color: #64748b; margin-top: 2px; font-weight: 500;">Faol ishtirokchilar va maktablar uchun</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="/js/i18n.js"></script>
@@ -1464,8 +1509,24 @@ window.addEventListener('DOMContentLoaded', async () => {
   } else {
     renderAll();
     pushHistory();
+    setTimeout(() => {
+      document.getElementById('welcome-modal').style.display = 'flex';
+    }, 250);
   }
 });
+
+function startNewDocument(type) {
+  document.getElementById('welcome-modal').style.display = 'none';
+  const doctypeSelect = document.getElementById('d-doctype');
+  if (doctypeSelect) {
+    doctypeSelect.value = type;
+    doctypeSelect.dispatchEvent(new Event('change'));
+  }
+  switchTab('templates', document.querySelectorAll('.ptab')[0]);
+  renderAll();
+  const label = doctypeSelect.options[doctypeSelect.selectedIndex].text.replace(/^[^\s]+\s+/, '');
+  showToast("Yangi " + label + " yaratilmoqda. Boshlash uchun shablon tanlang!", "success");
+}
 
 function getInitialScale() {
   if (!window.matchMedia('(max-width: 768px)').matches) return 0.5;
