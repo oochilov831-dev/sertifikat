@@ -1057,79 +1057,121 @@
     <div id="props-panel" style="display:none;">
       <h3>Xususiyatlar</h3>
       
-      <div class="prop-group">
-        <label class="prop-label">Matn kontenti</label>
-        <input class="prop-input" id="p-text" type="text" oninput="updateProp('text',this.value)">
+      <!-- Matn maydonlari xususiyatlari -->
+      <div id="prop-text-section">
+        <div class="prop-group">
+          <label class="prop-label">Matn kontenti</label>
+          <input class="prop-input" id="p-text" type="text" oninput="updateProp('text',this.value)">
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Shrift o'lchami</label>
+          <div class="prop-row">
+            <input class="prop-input" id="p-size" type="number" min="8" max="200" style="flex:1;" oninput="updateProp('fontSize',+this.value)">
+            <span style="font-size:12px;color:#475569;align-self:center;font-weight:600;">px</span>
+          </div>
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Matn rangi</label>
+          <div class="prop-row">
+            <input class="prop-color" id="p-color" type="color" oninput="updateProp('color',this.value)">
+            <input class="prop-input" id="p-color-hex" type="text" readonly style="flex:1;font-family:monospace;font-size:12px;">
+          </div>
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Matn qalinligi</label>
+          <select class="prop-select" id="p-weight" onchange="updateProp('fontWeight',this.value)">
+            <option value="normal">Normal</option>
+            <option value="bold">Qalin (Bold)</option>
+            <option value="300">Yengil (300)</option>
+            <option value="800">Juda qalin (800)</option>
+          </select>
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Shrift oilasi (Font Family)</label>
+          <select class="prop-select" id="p-font" onchange="updateProp('fontFamily',this.value)">
+            <option value="Arial">Arial</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+          </select>
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Matn hizalanishi</label>
+          <div class="align-btns">
+            <button class="align-btn" id="al-left" onclick="updateProp('align','left')" title="Chapga hizalash">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="15" y1="18" x2="3" y2="18"/></svg>
+            </button>
+            <button class="align-btn" id="al-center" onclick="updateProp('align','center')" title="Markazga hizalash">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="16" y1="18" x2="8" y2="18"/></svg>
+            </button>
+            <button class="align-btn" id="al-right" onclick="updateProp('align','right')" title="O'ngga hizalash">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="9" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="prop-group">
+          <label class="prop-label">Dinamik o'zgaruvchi</label>
+          <select class="prop-select" id="p-variable" onchange="updateProp('variable',this.value)">
+            <option value="">— o'zgaruvchi yo'q —</option>
+            <option value="{{recipient_name}}">Oluvchi ismi</option>
+            <option value="{{course_name}}">Kurs nomi</option>
+            <option value="{{issued_date}}">Sana</option>
+            <option value="{{cert_id}}">Sertifikat ID</option>
+            <option value="{{issuer_name}}">Tashkilot</option>
+          </select>
+        </div>
       </div>
-      
-      <div class="prop-group">
-        <label class="prop-label">Shrift o'lchami</label>
-        <div class="prop-row">
-          <input class="prop-input" id="p-size" type="number" min="8" max="200" style="flex:1;" oninput="updateProp('fontSize',+this.value)">
-          <span style="font-size:12px;color:#475569;align-self:center;font-weight:600;">px</span>
+
+      <!-- Rasm maydonlari xususiyatlari va fonni o'chirish -->
+      <div id="prop-image-section" style="display:none;">
+        <div class="prop-panel-group" style="margin-top: 5px; border-color: rgba(99, 102, 241, 0.25);">
+          <div class="ppg-header" style="background: rgba(99, 102, 241, 0.1); color: #818cf8; display: flex; align-items: center; justify-content: space-between;">
+            <span>🖼️ Rasm Fonini O'chirish</span>
+          </div>
+          <div class="ppg-body" style="padding: 12px;">
+            <div class="prop-group" style="margin-bottom: 10px;">
+              <label class="prop-label">Fon turi / Rangi</label>
+              <select class="prop-select" id="p-img-colormode" onchange="toggleCustomColorPicker()">
+                <option value="auto">Avtomatik (Burchak rangi)</option>
+                <option value="white">Oq orqa fon (#FFFFFF)</option>
+                <option value="black">Qora orqa fon (#000000)</option>
+                <option value="custom">Boshqa rang (Tanlash)</option>
+              </select>
+            </div>
+            
+            <div class="prop-group" id="p-img-customcolor-wrap" style="display:none; margin-bottom: 10px;">
+              <label class="prop-label">Fon rangi</label>
+              <input class="prop-color" id="p-img-customcolor" type="color" value="#ffffff" style="width: 100%; height: 34px;">
+            </div>
+
+            <div class="prop-group" style="margin-bottom: 12px;">
+              <label class="prop-label" style="display: flex; justify-content: space-between;">
+                <span>Sezuvchanlik (Tolerance)</span>
+                <span id="p-img-tolerance-val" style="font-weight: 700; color: #818cf8;">30</span>
+              </label>
+              <input type="range" id="p-img-tolerance" min="1" max="150" value="30" style="width:100%; accent-color:#6366f1;" oninput="document.getElementById('p-img-tolerance-val').textContent = this.value">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="tbtn tbtn-success flex-1 prop-btn-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); border: none;" onclick="removeSelectedBackground()">Fonni O'chirish</button>
+              <button class="tbtn tbtn-outline prop-btn-sm" onclick="restoreSelectedImage()" title="Asl holatga qaytarish">🔄 Tiklash</button>
+            </div>
+          </div>
         </div>
       </div>
       
-      <div class="prop-group">
-        <label class="prop-label">Matn rangi</label>
-        <div class="prop-row">
-          <input class="prop-color" id="p-color" type="color" oninput="updateProp('color',this.value)">
-          <input class="prop-input" id="p-color-hex" type="text" readonly style="flex:1;font-family:monospace;font-size:12px;">
-        </div>
-      </div>
-      
-      <div class="prop-group">
-        <label class="prop-label">Matn qalinligi</label>
-        <select class="prop-select" id="p-weight" onchange="updateProp('fontWeight',this.value)">
-          <option value="normal">Normal</option>
-          <option value="bold">Qalin (Bold)</option>
-          <option value="300">Yengil (300)</option>
-          <option value="800">Juda qalin (800)</option>
-        </select>
-      </div>
-      
-      <div class="prop-group">
-        <label class="prop-label">Shrift oilasi (Font Family)</label>
-        <select class="prop-select" id="p-font" onchange="updateProp('fontFamily',this.value)">
-          <option value="Arial">Arial</option>
-          <option value="Roboto">Roboto</option>
-          <option value="Montserrat">Montserrat</option>
-          <option value="Playfair Display">Playfair Display</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Courier New">Courier New</option>
-        </select>
-      </div>
-      
-      <div class="prop-group">
-        <label class="prop-label">Matn hizalanishi</label>
-        <div class="align-btns">
-          <button class="align-btn" id="al-left" onclick="updateProp('align','left')" title="Chapga hizalash">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="15" y1="18" x2="3" y2="18"/></svg>
-          </button>
-          <button class="align-btn" id="al-center" onclick="updateProp('align','center')" title="Markazga hizalash">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="10" x2="6" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="16" y1="18" x2="8" y2="18"/></svg>
-          </button>
-          <button class="align-btn" id="al-right" onclick="updateProp('align','right')" title="O'ngga hizalash">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="9" y2="18"/></svg>
-          </button>
-        </div>
-      </div>
-      
-      <div class="prop-group">
+      <!-- Umumiy kenglik sozlamasi -->
+      <div class="prop-group" id="prop-width-group">
         <label class="prop-label">Maydon kengligi (Eni - px)</label>
         <input class="prop-input" id="p-width" type="number" min="40" oninput="updateProp('w',+this.value)">
-      </div>
-      
-      <div class="prop-group">
-        <label class="prop-label">Dinamik o'zgaruvchi</label>
-        <select class="prop-select" id="p-variable" onchange="updateProp('variable',this.value)">
-          <option value="">— o'zgaruvchi yo'q —</option>
-          <option value="{{recipient_name}}">Oluvchi ismi</option>
-          <option value="{{course_name}}">Kurs nomi</option>
-          <option value="{{issued_date}}">Sana</option>
-          <option value="{{cert_id}}">Sertifikat ID</option>
-          <option value="{{issuer_name}}">Tashkilot</option>
-        </select>
       </div>
       
       <button class="tbtn tbtn-danger btn-full" onclick="deleteSelected()" style="margin-top:20px;">🗑️ Maydonni o'chirish</button>
@@ -1359,7 +1401,7 @@ function addImageField() {
     reader.onload = ev => {
       const img = new Image();
       img.onload = () => {
-        const f = { id:nextId++, type:'image', src:ev.target.result, imgEl:img,
+        const f = { id:nextId++, type:'image', src:ev.target.result, originalSrc:ev.target.result, imgEl:img,
           x:200, y:200, w:200, h:150, text:file.name, variable:'',
           fontSize:14, color:'#000', fontWeight:'normal', align:'left' };
         fields.push(f); selectField(f.id); renderAll(); pushHistory();
@@ -1563,17 +1605,137 @@ function syncPropsPanel() {
   document.getElementById('no-sel').style.display    = f ? 'none' : '';
   document.getElementById('props-panel').style.display = f ? '' : 'none';
   if (!f) return;
-  document.getElementById('p-text').value     = f.text     || '';
-  document.getElementById('p-size').value     = f.fontSize || 32;
-  document.getElementById('p-color').value    = f.color    || '#1a1a1a';
-  document.getElementById('p-color-hex').value = f.color   || '#1a1a1a';
-  document.getElementById('p-weight').value   = f.fontWeight || 'bold';
-  document.getElementById('p-font').value     = f.fontFamily || 'Arial';
+
+  const isImage = f.type === 'image';
+  document.getElementById('prop-text-section').style.display = isImage ? 'none' : '';
+  document.getElementById('prop-image-section').style.display = isImage ? '' : 'none';
+
+  if (isImage) {
+    document.getElementById('p-img-colormode').value = 'auto';
+    document.getElementById('p-img-tolerance').value = 30;
+    document.getElementById('p-img-tolerance-val').textContent = 30;
+    document.getElementById('p-img-customcolor-wrap').style.display = 'none';
+  } else {
+    document.getElementById('p-text').value     = f.text     || '';
+    document.getElementById('p-size').value     = f.fontSize || 32;
+    document.getElementById('p-color').value    = f.color    || '#1a1a1a';
+    document.getElementById('p-color-hex').value = f.color   || '#1a1a1a';
+    document.getElementById('p-weight').value   = f.fontWeight || 'bold';
+    document.getElementById('p-font').value     = f.fontFamily || 'Arial';
+    document.getElementById('p-variable').value = f.variable  || '';
+    ['left','center','right'].forEach(a =>
+      document.getElementById('al-'+a).classList.toggle('active', f.align===a));
+  }
   document.getElementById('p-width').value    = Math.round(f.w || 400);
-  document.getElementById('p-variable').value = f.variable  || '';
-  ['left','center','right'].forEach(a =>
-    document.getElementById('al-'+a).classList.toggle('active', f.align===a));
   renderFieldList();
+}
+
+function toggleCustomColorPicker() {
+  const mode = document.getElementById('p-img-colormode').value;
+  document.getElementById('p-img-customcolor-wrap').style.display = mode === 'custom' ? '' : 'none';
+}
+
+function removeSelectedBackground() {
+  if (!selectedId) return;
+  const f = fields.find(f => f.id === selectedId);
+  if (!f || f.type !== 'image') return showToast('Avval rasmli qatlamni tanlang', 'error');
+
+  if (!f.originalSrc) {
+    f.originalSrc = f.src;
+  }
+
+  showToast('Fonni olib tashlash bajarilmoqda...', '');
+  
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      const tolerance = parseInt(document.getElementById('p-img-tolerance').value || '30', 10);
+      const colorMode = document.getElementById('p-img-colormode').value;
+      
+      let targetR = 255, targetG = 255, targetB = 255;
+      if (colorMode === 'auto') {
+        targetR = data[0];
+        targetG = data[1];
+        targetB = data[2];
+      } else if (colorMode === 'white') {
+        targetR = 255; targetG = 255; targetB = 255;
+      } else if (colorMode === 'black') {
+        targetR = 0; targetG = 0; targetB = 0;
+      } else if (colorMode === 'custom') {
+        const hex = document.getElementById('p-img-customcolor').value || '#ffffff';
+        targetR = parseInt(hex.slice(1,3), 16);
+        targetG = parseInt(hex.slice(3,5), 16);
+        targetB = parseInt(hex.slice(5,7), 16);
+      }
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+
+        const dist = Math.sqrt(
+          Math.pow(r - targetR, 2) +
+          Math.pow(g - targetG, 2) +
+          Math.pow(b - targetB, 2)
+        );
+
+        if (dist <= tolerance) {
+          if (dist > tolerance * 0.8 && tolerance > 0) {
+            const ratio = (dist - tolerance * 0.8) / (tolerance * 0.2);
+            data[i+3] = Math.round(ratio * 255);
+          } else {
+            data[i+3] = 0;
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      const transparentDataUrl = canvas.toDataURL('image/png');
+
+      f.src = transparentDataUrl;
+      const newImg = new Image();
+      newImg.onload = () => {
+        f.imgEl = newImg;
+        renderAll();
+        pushHistory();
+        showToast("✅ Rasm foni muvaffaqiyatli olib tashlandi!", "success");
+      };
+      newImg.src = transparentDataUrl;
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Xato: Rasmdan fonni olib tashlash muvaffaqiyatsiz tugadi.", "error");
+    }
+  };
+  img.onerror = () => {
+    showToast("❌ Rasmni yuklashda xato yuz berdi", "error");
+  };
+  img.src = f.originalSrc;
+}
+
+function restoreSelectedImage() {
+  if (!selectedId) return;
+  const f = fields.find(f => f.id === selectedId);
+  if (!f || f.type !== 'image' || !f.originalSrc) return showToast('Rasm asl holatida yoki tiklab bo\'lmaydi', 'error');
+
+  f.src = f.originalSrc;
+  const img = new Image();
+  img.onload = () => {
+    f.imgEl = img;
+    renderAll();
+    pushHistory();
+    showToast("🔄 Rasm asl holatiga qaytarildi", "success");
+  };
+  img.src = f.originalSrc;
 }
 function renderFieldList() {
   document.getElementById('field-list').innerHTML = fields.map(f => `
