@@ -807,87 +807,95 @@ class AuthController {
     }
 
     public function googleCallback(): void {
-        $code = $_GET['code'] ?? '';
-        if (!$code) {
-            header("Location: /login.html?error=Google_auth_failed");
-            exit;
-        }
+        try {
+            $code = $_GET['code'] ?? '';
+            if (!$code) {
+                header("Location: /login.html?error=Google_auth_failed");
+                exit;
+            }
 
-        $clientId = env('GOOGLE_CLIENT_ID');
-        $clientSecret = env('GOOGLE_CLIENT_SECRET');
-        $redirectUri = env('GOOGLE_REDIRECT_URI');
+            $clientId = env('GOOGLE_CLIENT_ID');
+            $clientSecret = env('GOOGLE_CLIENT_SECRET');
+            $redirectUri = env('GOOGLE_REDIRECT_URI');
 
-        $ch = curl_init('https://oauth2.googleapis.com/token');
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'code' => $code,
-            'client_id' => $clientId,
-            'client_secret' => $clientSecret,
-            'redirect_uri' => $redirectUri,
-            'grant_type' => 'authorization_code'
-        ]));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $res = curl_exec($ch);
-        curl_close($ch);
+            $ch = curl_init('https://oauth2.googleapis.com/token');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'code' => $code,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'redirect_uri' => $redirectUri,
+                'grant_type' => 'authorization_code'
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $res = curl_exec($ch);
+            curl_close($ch);
 
-        $tokenData = json_decode($res, true);
-        $accessToken = $tokenData['access_token'] ?? '';
+            $tokenData = json_decode($res, true);
+            $accessToken = $tokenData['access_token'] ?? '';
 
-        if (!$accessToken) {
-            header("Location: /login.html?error=Google_token_failed");
-            exit;
-        }
+            if (!$accessToken) {
+                throw new \Exception("Google token olish muvaffaqiyatsiz yakunlandi. Response: " . $res);
+            }
 
-        $ch = curl_init('https://www.googleapis.com/oauth2/v3/userinfo');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer {$accessToken}"
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $profileRes = curl_exec($ch);
-        curl_close($ch);
-
-        $profile = json_decode($profileRes, true);
-        $email = trim($profile['email'] ?? '');
-        $name = trim($profile['name'] ?? 'Google User');
-
-        if (!$email) {
-            header("Location: /login.html?error=Google_email_not_provided");
-            exit;
-        }
-
-        $user = $this->users->findByEmail($email);
-        if (!$user) {
-            $userId = $this->users->create([
-                'name' => $name,
-                'email' => $email,
-                'phone' => null,
-                'password' => bin2hex(random_bytes(16))
+            $ch = curl_init('https://www.googleapis.com/oauth2/v3/userinfo');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer {$accessToken}"
             ]);
-            $this->users->verify($userId);
-            $user = $this->users->findById($userId);
-        }
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $profileRes = curl_exec($ch);
+            curl_close($ch);
 
-        if (!$user['is_active']) {
-            header("Location: /login.html?error=User_blocked");
+            $profile = json_decode($profileRes, true);
+            $email = trim($profile['email'] ?? '');
+            $name = trim($profile['name'] ?? 'Google User');
+
+            if (!$email) {
+                throw new \Exception("Google email topilmadi. Response: " . $profileRes);
+            }
+
+            $user = $this->users->findByEmail($email);
+            if (!$user) {
+                $userId = $this->users->create([
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => null,
+                    'password' => bin2hex(random_bytes(16))
+                ]);
+                $this->users->verify($userId);
+                $user = $this->users->findById($userId);
+            }
+
+            if (!$user['is_active']) {
+                header("Location: /login.html?error=User_blocked");
+                exit;
+            }
+
+            $sid = $this->registerSession($user['id']);
+            $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role'], 'sid' => $sid]);
+
+            $userSafe = [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'phone' => $user['phone'],
+                'role' => $user['role'],
+                'is_verified' => 1
+            ];
+
+            $redirectUrl = '/login.html?google_token=' . urlencode($token) . '&google_user=' . urlencode(json_encode($userSafe));
+            header("Location: {$redirectUrl}");
+            exit;
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Google Auth Error: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             exit;
         }
-
-        $sid = $this->registerSession($user['id']);
-        $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role'], 'sid' => $sid]);
-
-        $userSafe = [
-            'id' => $user['id'],
-            'name' => $user['name'],
-            'email' => $user['email'],
-            'phone' => $user['phone'],
-            'role' => $user['role'],
-            'is_verified' => 1
-        ];
-
-        $redirectUrl = '/login.html?google_token=' . urlencode($token) . '&google_user=' . urlencode(json_encode($userSafe));
-        header("Location: {$redirectUrl}");
-        exit;
     }
 }
