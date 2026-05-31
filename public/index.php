@@ -54,6 +54,8 @@ $router = new Router();
 // Auth
 $router->post('/api/auth/register',         fn() => (new AuthController)->register());
 $router->post('/api/auth/login',             fn() => (new AuthController)->login());
+$router->get('/api/auth/google',             fn() => (new AuthController)->googleRedirect());
+$router->get('/api/auth/google/callback',    fn() => (new AuthController)->googleCallback());
 $router->post('/api/auth/forgot-password',   fn() => (new AuthController)->forgotPassword());
 $router->post('/api/auth/reset-password',    fn() => (new AuthController)->resetPassword());
 $router->post('/api/auth/verify-email',      fn() => (new AuthController)->verifyEmail());
