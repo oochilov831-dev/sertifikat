@@ -298,6 +298,14 @@
         <a href="/constructor.html?load_saved=1" class="btn-primary" style="display:block;text-align:center;text-decoration:none;">Konstruktorda ochish</a>
       </div>
 
+      <!-- Faol sessiyalar -->
+      <div class="card">
+        <h2>💻 Faol sessiyalar</h2>
+        <div id="sessions-list" style="display:flex; flex-direction:column; gap:12px;">
+          <div style="font-size:13px;color:#64748b;">Sessiyalar yuklanmoqda...</div>
+        </div>
+      </div>
+
       <!-- Xavfli zona -->
       <div class="danger-zone">
         <h3>⚠️ Xavfli zona</h3>
@@ -410,12 +418,81 @@
       const expiry = subscription.expires_at
         ? 'Muddati: <strong>' + fmt.date(subscription.expires_at) + '</strong>'
         : 'Cheksiz';
+      const planNames = { free: 'Bepul', standard: 'Standart', pro: 'Pro' };
+      const plan = subscription?.plan || 'free';
       document.getElementById('sub-info').innerHTML = `Tarif: <strong>${planNames[plan]}</strong> &nbsp;·&nbsp; ${expiry}`;
     }
 
-    // Statistika
     loadStats(user.id);
     loadSavedConstructorInfo();
+    loadSessions();
+  }
+
+  async function loadSessions() {
+    const listEl = document.getElementById('sessions-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="font-size:13px;color:#64748b;">Sessiyalar yuklanmoqda...</div>';
+
+    try {
+      const res = await Api.request('GET', '/auth/sessions');
+      const sessions = res.data || [];
+      if (sessions.length === 0) {
+        listEl.innerHTML = '<div style="font-size:13px;color:#64748b;">Faol sessiyalar topilmadi.</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      sessions.forEach(sess => {
+        const isCurrent = sess.is_current;
+        const item = document.createElement('div');
+        item.style.cssText = `padding: 12px; border-radius: 10px; background: ${isCurrent ? '#e0e7ff' : '#f8fafc'}; border: ${isCurrent ? '1px solid #c7d2fe' : '1px solid #e2e8f0'}; display: flex; justify-content: space-between; align-items: center; gap: 10px;`;
+
+        const info = document.createElement('div');
+        info.style.flex = '1';
+        
+        const device = document.createElement('strong');
+        device.style.cssText = 'font-size: 14px; color: #1e293b; display: block;';
+        device.textContent = sess.device_type || 'Noma\'lum Qurilma';
+
+        const details = document.createElement('span');
+        details.style.cssText = 'font-size: 12px; color: #64748b; font-weight: normal;';
+        details.innerHTML = `IP: ${sess.ip_address} <br> Faollik: ${fmt.date(sess.last_activity)}`;
+
+        info.appendChild(device);
+        info.appendChild(details);
+
+        const actions = document.createElement('div');
+        if (isCurrent) {
+          const badge = document.createElement('span');
+          badge.style.cssText = 'font-size: 11px; font-weight: bold; color: #4f46e5; background: #c7d2fe; padding: 3px 8px; border-radius: 12px;';
+          badge.textContent = 'Joriy';
+          actions.appendChild(badge);
+        } else {
+          const btn = document.createElement('button');
+          btn.style.cssText = 'padding: 6px 12px; background: #fee2e2; color: #ef4444; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;';
+          btn.textContent = 'Bekor qilish';
+          btn.onmouseover = () => btn.style.background = '#fca5a5';
+          btn.onmouseout = () => btn.style.background = '#fee2e2';
+          btn.onclick = async () => {
+            if (!confirm('Ushbu qurilmadagi sessiyani bekor qilmoqchimisiz?')) return;
+            try {
+              await Api.request('DELETE', '/auth/sessions', { session_id: sess.id });
+              window.Toast ? Toast.success('Sessiya bekor qilindi') : alert('Sessiya bekor qilindi');
+              loadSessions();
+            } catch (err) {
+              window.Toast ? Toast.error(err.message) : alert(err.message);
+            }
+          };
+          actions.appendChild(btn);
+        }
+
+        item.appendChild(info);
+        item.appendChild(actions);
+        listEl.appendChild(item);
+      });
+    } catch (e) {
+      listEl.innerHTML = '<div style="font-size:13px;color:#ef4444;">Sessiyalarni yuklashda xatolik yuz berdi.</div>';
+    }
   }
 
   async function loadSavedConstructorInfo() {
@@ -431,7 +508,6 @@
   async function loadStats(userId) {
     const res = await Api.request('GET', '/certificates?page=1&limit=1');
     document.getElementById('s-total').textContent = res.total || 0;
-    // Umumiy ko'rishlar uchun alohida endpoint yo'q — dashboard dan olinadi
     const res2 = await Api.request('GET', '/certificates?page=1&limit=100');
     const certs = res2.items || [];
     const views = certs.reduce((s, c) => s + (c.view_count || 0), 0);

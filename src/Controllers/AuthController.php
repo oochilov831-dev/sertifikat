@@ -19,6 +19,60 @@ class AuthController {
         $this->db    = \Database::getInstance();
     }
 
+    private function registerSession(int $userId): string {
+        $sid = bin2hex(random_bytes(32));
+        $ip = \App\Middleware\RateLimiter::ip();
+        $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        
+        $deviceType = 'Desktop';
+        if (preg_match('/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i', $ua)) {
+            $deviceType = 'Tablet';
+        } elseif (preg_match('/(mobi|ipod|iphone|opera mini|fennec|minimo|symbian|psp|nintendo)/i', $ua)) {
+            $deviceType = 'Mobile';
+        }
+        
+        $os = 'Unknown OS';
+        if (preg_match('/windows|win32/i', $ua)) {
+            $os = 'Windows';
+        } elseif (preg_match('/macintosh|mac os x/i', $ua)) {
+            $os = 'macOS';
+        } elseif (preg_match('/linux/i', $ua)) {
+            $os = 'Linux';
+        } elseif (preg_match('/iphone|ipad|ipod/i', $ua)) {
+            $os = 'iOS';
+        } elseif (preg_match('/android/i', $ua)) {
+            $os = 'Android';
+        }
+        
+        $browser = 'Unknown Browser';
+        if (preg_match('/chrome/i', $ua)) {
+            $browser = 'Chrome';
+        } elseif (preg_match('/firefox/i', $ua)) {
+            $browser = 'Firefox';
+        } elseif (preg_match('/safari/i', $ua)) {
+            $browser = 'Safari';
+        } elseif (preg_match('/edge/i', $ua)) {
+            $browser = 'Edge';
+        } elseif (preg_match('/opera/i', $ua)) {
+            $browser = 'Opera';
+        }
+        
+        $deviceInfo = "{$deviceType} ({$os} - {$browser})";
+        
+        $stmt = $this->db->prepare(
+            'INSERT INTO user_sessions (user_id, sid, ip_address, user_agent, device_type) VALUES (?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$userId, $sid, $ip, $ua, $deviceInfo]);
+        
+        return $sid;
+    }
+
+    private function extractTokenFromRequest(): ?string {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (preg_match('/Bearer\s+(.+)/', $header, $m)) return $m[1];
+        return $_COOKIE['token'] ?? null;
+    }
+
     // POST /api/auth/register
     public function register(): never {
         (new RateLimiter)->check('register:' . RateLimiter::ip(), 10, 3600);
@@ -48,7 +102,8 @@ class AuthController {
         ]);
 
         $user  = $this->users->findById($userId);
-        $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role']]);
+        $sid   = $this->registerSession($user['id']);
+        $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role'], 'sid' => $sid]);
 
         AuditLogger::log('register', $userId);
 
@@ -180,7 +235,8 @@ class AuthController {
 
         AuditLogger::log('login', $user['id']);
 
-        $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role']]);
+        $sid   = $this->registerSession($user['id']);
+        $token = JWT::encode(['sub' => $user['id'], 'role' => $user['role'], 'sid' => $sid]);
 
         success([
             'token' => $token,
@@ -680,5 +736,50 @@ class AuthController {
         unset($user['password'], $user['totp_secret'], $user['recovery_codes'], $user['api_key']);
         $user['has_api_key'] = $hasApiKey;
         return $user;
+    }
+
+    public function getSessions(): void {
+        $user = AuthMiddleware::handle();
+        
+        $token = $this->extractTokenFromRequest();
+        $currentSid = null;
+        if ($token) {
+            $payload = JWT::decode($token);
+            $currentSid = $payload['sid'] ?? null;
+        }
+
+        $stmt = $this->db->prepare(
+            'SELECT id, ip_address, device_type, created_at, last_activity, sid
+             FROM user_sessions
+             WHERE user_id = ? AND is_revoked = false
+             ORDER BY last_activity DESC'
+        );
+        $stmt->execute([$user['id']]);
+        $sessions = $stmt->fetchAll();
+
+        // Mark current session
+        foreach ($sessions as &$sess) {
+            $sess['is_current'] = ($sess['sid'] === $currentSid);
+            unset($sess['sid']);
+        }
+
+        success($sessions);
+    }
+
+    public function revokeSession(): void {
+        $user = AuthMiddleware::handle();
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $sessionId = (int)($data['session_id'] ?? 0);
+
+        if (!$sessionId) {
+            error('Sessiya ID kiritilishi shart', 422);
+        }
+
+        $stmt = $this->db->prepare(
+            'UPDATE user_sessions SET is_revoked = true WHERE id = ? AND user_id = ?'
+        );
+        $stmt->execute([$sessionId, $user['id']]);
+
+        success(null, 'Sessiya bekor qilindi');
     }
 }

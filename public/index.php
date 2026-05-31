@@ -77,6 +77,8 @@ $router->post('/api/auth/seal',              fn() => (new AuthController)->uploa
 $router->delete('/api/auth/seal',            fn() => (new AuthController)->deleteSeal());
 $router->delete('/api/auth/account',         fn() => (new AuthController)->deleteAccount());
 $router->get('/api/auth/export',             fn() => (new AuthController)->exportData());
+$router->get('/api/auth/sessions',           fn() => (new AuthController)->getSessions());
+$router->delete('/api/auth/sessions',        fn() => (new AuthController)->revokeSession());
 
 // Sertifikatlar
 $router->get('/api/certificates',            fn() => (new CertificateController)->index());

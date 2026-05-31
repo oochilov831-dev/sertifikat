@@ -12,7 +12,18 @@ class AuthMiddleware {
         $db      = \Database::getInstance();
         
         if ($payload) {
-            $stmt = $db->prepare('SELECT id, uuid, name, email, phone, role, is_active FROM users WHERE id = ?');
+            if (!empty($payload['sid'])) {
+                $sessStmt = $db->prepare('SELECT is_revoked FROM user_sessions WHERE sid = ?');
+                $sessStmt->execute([$payload['sid']]);
+                $session = $sessStmt->fetch();
+                if (!$session || $session['is_revoked']) {
+                    error('Sessiya bekor qilingan yoki topilmadi', 401);
+                }
+                
+                // Update last_activity of the session
+                $db->prepare('UPDATE user_sessions SET last_activity = NOW() WHERE sid = ?')->execute([$payload['sid']]);
+            }
+            $stmt = $db->prepare('SELECT id, uuid, name, email, phone, role, is_active, is_verified FROM users WHERE id = ?');
             $stmt->execute([$payload['sub']]);
             $user = $stmt->fetch();
         } else {

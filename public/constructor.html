@@ -1460,7 +1460,11 @@
 
   <!-- Central Canvas Board -->
   <div class="canvas-area" id="canvas-area" onclick="deselectAll(event)">
-    <div class="canvas-wrap" id="canvas-wrap">
+    <div class="canvas-wrap" id="canvas-wrap" style="position: relative; overflow: visible !important;">
+      <!-- Visual Rulers -->
+      <canvas id="ruler-x" style="position: absolute; left: 0; top: -20px; width: 100%; height: 20px; background: #111726; border-bottom: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; z-index: 90;"></canvas>
+      <canvas id="ruler-y" style="position: absolute; left: -20px; top: 0; width: 20px; height: 100%; background: #111726; border-right: 1px solid rgba(255,255,255,0.08); box-sizing: border-box; z-index: 90;"></canvas>
+
       <canvas id="cert-canvas" width="1280" height="960"></canvas>
       <div class="field-overlay" id="field-overlay"></div>
     </div>
@@ -1475,6 +1479,27 @@
     
     <div id="props-panel" style="display:none;">
       <h3>Xususiyatlar</h3>
+
+      <!-- Guruhlash va Hizalash Section -->
+      <div class="prop-group" style="border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 16px; margin-bottom: 16px;">
+        <label class="prop-label" style="color: #818cf8; font-weight: 700; margin-bottom: 8px;">Guruhlash va Hizalash</label>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="groupSelected()" title="Tanlangan maydonlarni guruhlash">🔗 Guruhlash</button>
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="ungroupSelected()" title="Guruhdan chiqarish">🔓 Ungro'p</button>
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="alignSelected('left')" title="Chap tomonga hizalash">← Chapga</button>
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="alignSelected('center-x')" title="Markazga hizalash">↔ Markaz</button>
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="alignSelected('right')" title="O'ng tomonga hizalash">→ O'ngga</button>
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="distributeSpacing('horizontal')" title="Gorizontal oraliqlarni teng taqsimlash">⇎ Gorizontal</button>
+          <button class="tbtn tbtn-outline prop-btn-sm" style="flex: 1; font-size: 11px; padding: 6px 4px; display: inline-flex; min-height: auto;" onclick="distributeSpacing('vertical')" title="Vertikal oraliqlarni teng taqsimlash">⇳ Vertikal</button>
+        </div>
+      </div>
       
       <!-- Matn maydonlari xususiyatlari -->
       <div id="prop-text-section">
@@ -1602,7 +1627,10 @@
         </div>
       </div>
       
-      <button class="tbtn tbtn-danger btn-full" onclick="deleteSelected()" style="margin-top:20px;">🗑️ Maydonni o'chirish</button>
+      <div style="display: flex; gap: 8px; margin-top: 20px;">
+        <button class="tbtn tbtn-outline flex-1" id="prop-lock-btn" onclick="toggleLockSelected()" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.08); font-size: 12px;">🔒 Qulflash</button>
+        <button class="tbtn tbtn-danger flex-1" onclick="deleteSelected()" style="font-size: 12px;">🗑️ O'chirish</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1711,7 +1739,7 @@ requireAuth();
 
 let CANVAS_W = 1280, CANVAS_H = 960;
 let ORIENTATION = 'landscape';
-let scale = 0.5, fields = [], selectedId = null, templateId = null, bgImage = null;
+let scale = 0.5, fields = [], selectedId = null, selectedIds = [], activeGuides = [], templateId = null, bgImage = null;
 let nextId = 1;
 let templatesById = {};
 const GRID = 10;
@@ -2013,19 +2041,68 @@ function addSignatureField() {
   switchTab('fields', document.querySelectorAll('.ptab')[1]);
 }
 function deleteSelected() {
-  if (!selectedId) return;
-  fields = fields.filter(f => f.id !== selectedId); selectedId = null;
+  if (selectedIds.length === 0) return;
+  fields = fields.filter(f => !selectedIds.includes(f.id));
+  selectedIds = [];
+  selectedId = null;
   renderAll(); syncPropsPanel();
   pushHistory();
 }
-function selectField(id) { selectedId = id; syncPropsPanel(); renderOverlay(); }
+function selectField(id, isMulti = false) {
+  const clickedField = fields.find(f => f.id === id);
+  if (!clickedField) return;
+
+  const gId = clickedField.groupId;
+  const groupFields = gId ? fields.filter(f => f.groupId === gId) : [clickedField];
+  const groupIds = groupFields.map(f => f.id);
+
+  if (isMulti) {
+    const allSelected = groupIds.every(gid => selectedIds.includes(gid));
+    if (allSelected) {
+      selectedIds = selectedIds.filter(gid => !groupIds.includes(gid));
+    } else {
+      groupIds.forEach(gid => {
+        if (!selectedIds.includes(gid)) selectedIds.push(gid);
+      });
+    }
+  } else {
+    selectedIds = [...groupIds];
+  }
+
+  selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
+  syncPropsPanel();
+  renderOverlay();
+}
 function deselectAll(e) {
-  const targets = ['canvas-area','canvas-wrap','cert-canvas'];
-  if (targets.includes(e.target.id)) { selectedId = null; syncPropsPanel(); renderOverlay(); }
+  const targets = ['canvas-area','canvas-wrap','cert-canvas','field-overlay'];
+  if (targets.includes(e.target.id) || e.target.classList.contains('canvas-area') || e.target.classList.contains('field-overlay')) {
+    selectedId = null;
+    selectedIds = [];
+    syncPropsPanel();
+    renderOverlay();
+  }
 }
 function updateProp(key, val) {
   const f = fields.find(f => f.id === selectedId); if (!f) return;
-  f[key] = val; renderAll(); syncPropsPanel();
+  fields.forEach(elem => {
+    if (selectedIds.includes(elem.id) && !elem.locked) {
+      elem[key] = val;
+    }
+  });
+  renderAll(); syncPropsPanel();
+  pushHistory();
+}
+function toggleLockSelected() {
+  if (selectedIds.length === 0) return;
+  const anyUnlocked = fields.some(f => selectedIds.includes(f.id) && !f.locked);
+  fields.forEach(f => {
+    if (selectedIds.includes(f.id)) {
+      f.locked = anyUnlocked;
+    }
+  });
+  showToast(anyUnlocked ? "🔒 Maydonlar qulflandi" : "🔓 Maydonlar ochildi", "success");
+  syncPropsPanel();
+  renderOverlay();
   pushHistory();
 }
 
@@ -2181,6 +2258,10 @@ function syncPropsPanel() {
   }
   document.getElementById('p-width').value    = Math.round(f.w || 400);
   document.getElementById('p-height').value   = Math.round(f.h || 60);
+  const lockBtn = document.getElementById('prop-lock-btn');
+  if (lockBtn) {
+    lockBtn.textContent = f.locked ? "🔓 Ochish" : "🔒 Qulflash";
+  }
   renderFieldList();
 }
 
@@ -2293,49 +2374,239 @@ function restoreSelectedImage() {
 }
 function renderFieldList() {
   document.getElementById('field-list').innerHTML = fields.map(f => `
-    <div class="field-chip${f.id===selectedId?' active':''}" onclick="selectField(${f.id})">
+    <div class="field-chip${selectedIds.includes(f.id)?' active':''}" onclick="selectField(${f.id}, event.ctrlKey || event.shiftKey)">
       <span class="fc-icon">${fieldIcon(f)}</span>
-      <span class="fc-label">${esc(f.text?.slice(0,18)||'Matn')}</span>
+      <span class="fc-label">${esc(f.text?.slice(0,18)||(f.type==='image'?'Rasm':'Matn'))}</span>
       <span class="fc-del" onclick="event.stopPropagation();removeField(${f.id})">✖</span>
     </div>`).join('');
 }
 function removeField(id) {
   fields = fields.filter(f => f.id!==id);
-  if (selectedId===id) selectedId=null;
+  selectedIds = selectedIds.filter(gid => gid !== id);
+  if (selectedId===id) selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   renderAll(); syncPropsPanel();
   pushHistory();
 }
 
 function duplicateSelected() {
-  const f = fields.find(f => f.id === selectedId);
-  if (!f) return showToast('Avval maydonni tanlang', 'error');
-  const { imgEl, ...rest } = f;
-  const copy = {
-    ...rest,
-    id: nextId++,
-    text: `${rest.text || 'Maydon'} copy`,
-    x: Math.min(CANVAS_W - (rest.w || 120), (rest.x || 0) + 30),
-    y: Math.min(CANVAS_H - (rest.h || 60), (rest.y || 0) + 30),
-  };
-  if (imgEl) copy.imgEl = imgEl;
-  fields.push(copy);
-  selectField(copy.id);
-  renderAll();
-  pushHistory();
-}
-
-function alignSelected(mode) {
-  const f = fields.find(f => f.id === selectedId);
-  if (!f) return showToast('Avval maydonni tanlang', 'error');
-  if (mode === 'left') f.x = 60;
-  if (mode === 'right') f.x = CANVAS_W - (f.w || 120) - 60;
-  if (mode === 'center-x') f.x = Math.round((CANVAS_W - (f.w || 120)) / 2);
-  if (mode === 'center-y') f.y = Math.round((CANVAS_H - (f.h || 60)) / 2);
-  f.x = snap(f.x);
-  f.y = snap(f.y);
+  if (selectedIds.length === 0) return showToast('Avval maydonni tanlang', 'error');
+  const duplicatedIds = [];
+  selectedIds.forEach(id => {
+    const f = fields.find(f => f.id === id);
+    if (!f) return;
+    const { imgEl, ...rest } = f;
+    const copy = {
+      ...rest,
+      id: nextId++,
+      text: rest.text ? `${rest.text} copy` : 'Maydon',
+      x: Math.min(CANVAS_W - (rest.w || 120), (rest.x || 0) + 30),
+      y: Math.min(CANVAS_H - (rest.h || 60), (rest.y || 0) + 30),
+    };
+    if (imgEl) copy.imgEl = imgEl;
+    fields.push(copy);
+    duplicatedIds.push(copy.id);
+  });
+  selectedIds = duplicatedIds;
+  selectedId = selectedIds[0] || null;
   renderAll();
   syncPropsPanel();
   pushHistory();
+  showToast("📋 Maydonlar ko'paytirildi", "success");
+}
+
+function alignSelected(mode) {
+  const selectedFields = fields.filter(f => selectedIds.includes(f.id) && !f.locked);
+  if (selectedFields.length === 0) return showToast('Tahrirlash uchun maydon tanlang', 'error');
+
+  if (selectedFields.length === 1) {
+    const f = selectedFields[0];
+    if (mode === 'left') f.x = 60;
+    else if (mode === 'right') f.x = CANVAS_W - (f.w || 120) - 60;
+    else if (mode === 'center-x') f.x = Math.round((CANVAS_W - (f.w || 120)) / 2);
+    else if (mode === 'center-y') f.y = Math.round((CANVAS_H - (f.h || 60)) / 2);
+    f.x = snap(f.x);
+    f.y = snap(f.y);
+  } else {
+    const minX = Math.min(...selectedFields.map(f => f.x));
+    const maxX = Math.max(...selectedFields.map(f => f.x + f.w));
+    const minY = Math.min(...selectedFields.map(f => f.y));
+    const maxY = Math.max(...selectedFields.map(f => f.y + (f.h || 60)));
+
+    selectedFields.forEach(f => {
+      if (mode === 'left') {
+        f.x = minX;
+      } else if (mode === 'right') {
+        f.x = maxX - f.w;
+      } else if (mode === 'center-x') {
+        f.x = Math.round(minX + (maxX - minX - f.w) / 2);
+      } else if (mode === 'center-y') {
+        f.y = Math.round(minY + (maxY - minY - (f.h || 60)) / 2);
+      }
+      f.x = snap(f.x);
+      f.y = snap(f.y);
+    });
+  }
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+  showToast("🎯 Maydonlar hizalandi", "success");
+}
+
+function distributeSpacing(direction) {
+  const selectedFields = fields.filter(f => selectedIds.includes(f.id) && !f.locked);
+  if (selectedFields.length < 3) {
+    return showToast('Taqsimlash uchun kamida 3 ta maydon tanlanishi kerak', 'error');
+  }
+
+  if (direction === 'horizontal') {
+    const sorted = selectedFields.slice().sort((a, b) => a.x - b.x);
+    const minX = sorted[0].x;
+    const maxX = sorted[sorted.length - 1].x + sorted[sorted.length - 1].w;
+    const totalW = sorted.reduce((sum, f) => sum + f.w, 0);
+    const remaining = (maxX - minX) - totalW;
+    const gap = remaining / (sorted.length - 1);
+
+    let currentX = minX;
+    for (let i = 0; i < sorted.length; i++) {
+      sorted[i].x = Math.round(currentX);
+      currentX += sorted[i].w + gap;
+    }
+  } else {
+    const sorted = selectedFields.slice().sort((a, b) => a.y - b.y);
+    const minY = sorted[0].y;
+    const maxY = sorted[sorted.length - 1].y + (sorted[sorted.length - 1].h || 60);
+    const totalH = sorted.reduce((sum, f) => sum + (f.h || 60), 0);
+    const remaining = (maxY - minY) - totalH;
+    const gap = remaining / (sorted.length - 1);
+
+    let currentY = minY;
+    for (let i = 0; i < sorted.length; i++) {
+      sorted[i].y = Math.round(currentY);
+      currentY += (sorted[i].h || 60) + gap;
+    }
+  }
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+  showToast("⇎ Oraliqlar teng taqsimlandi", "success");
+}
+
+function groupSelected() {
+  const activeFields = fields.filter(f => selectedIds.includes(f.id) && !f.locked);
+  if (activeFields.length < 2) {
+    return showToast('Guruhlash uchun kamida 2 ta maydon tanlang', 'error');
+  }
+  const gId = 'g_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+  activeFields.forEach(f => {
+    f.groupId = gId;
+  });
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+  showToast("🔗 Maydonlar guruhlandi", "success");
+}
+
+function ungroupSelected() {
+  const activeFields = fields.filter(f => selectedIds.includes(f.id));
+  const groupsToClear = new Set();
+  activeFields.forEach(f => {
+    if (f.groupId) groupsToClear.add(f.groupId);
+  });
+  if (groupsToClear.size === 0) {
+    return showToast('Guruhlar topilmadi', 'error');
+  }
+  fields.forEach(f => {
+    if (f.groupId && groupsToClear.has(f.groupId)) {
+      f.groupId = null;
+    }
+  });
+  renderAll();
+  syncPropsPanel();
+  pushHistory();
+  showToast("🔓 Guruhlar tarqatildi", "success");
+}
+
+function drawRulers() {
+  const rx = document.getElementById('ruler-x');
+  const ry = document.getElementById('ruler-y');
+  if (!rx || !ry) return;
+
+  rx.width = CANVAS_W;
+  rx.height = 20;
+  ry.width = 20;
+  ry.height = CANVAS_H;
+
+  const ctxX = rx.getContext('2d');
+  const ctxY = ry.getContext('2d');
+
+  ctxX.clearRect(0, 0, CANVAS_W, 20);
+  ctxY.clearRect(0, 0, 20, CANVAS_H);
+
+  ctxX.fillStyle = '#111726';
+  ctxX.fillRect(0, 0, CANVAS_W, 20);
+  ctxY.fillStyle = '#111726';
+  ctxY.fillRect(0, 0, 20, CANVAS_H);
+
+  ctxX.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctxX.lineWidth = 1;
+  ctxY.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctxY.lineWidth = 1;
+
+  ctxX.fillStyle = '#94a3b8';
+  ctxX.font = '9px sans-serif';
+  ctxX.textAlign = 'center';
+  ctxX.textBaseline = 'middle';
+
+  ctxY.fillStyle = '#94a3b8';
+  ctxY.font = '9px sans-serif';
+  ctxY.textAlign = 'center';
+  ctxY.textBaseline = 'middle';
+
+  for (let x = 0; x < CANVAS_W; x += 10) {
+    if (x % 100 === 0) {
+      ctxX.beginPath();
+      ctxX.moveTo(x, 0);
+      ctxX.lineTo(x, 12);
+      ctxX.stroke();
+      if (x > 0) ctxX.fillText(x.toString(), x, 15);
+    } else if (x % 50 === 0) {
+      ctxX.beginPath();
+      ctxX.moveTo(x, 0);
+      ctxX.lineTo(x, 8);
+      ctxX.stroke();
+    } else {
+      ctxX.beginPath();
+      ctxX.moveTo(x, 0);
+      ctxX.lineTo(x, 4);
+      ctxX.stroke();
+    }
+  }
+
+  for (let y = 0; y < CANVAS_H; y += 10) {
+    if (y % 100 === 0) {
+      ctxY.beginPath();
+      ctxY.moveTo(0, y);
+      ctxY.lineTo(12, y);
+      ctxY.stroke();
+      if (y > 0) {
+        ctxY.save();
+        ctxY.translate(15, y);
+        ctxY.rotate(-Math.PI / 2);
+        ctxY.fillText(y.toString(), 0, 0);
+        ctxY.restore();
+      }
+    } else if (y % 50 === 0) {
+      ctxY.beginPath();
+      ctxY.moveTo(0, y);
+      ctxY.lineTo(8, y);
+      ctxY.stroke();
+    } else {
+      ctxY.beginPath();
+      ctxY.moveTo(0, y);
+      ctxY.lineTo(4, y);
+      ctxY.stroke();
+    }
+  }
 }
 
 // --- Canvas Draw Operations ---
@@ -2481,39 +2752,197 @@ function drawSignaturePreview(ctx, f) {
 
 function renderOverlay() {
   const ov = document.getElementById('field-overlay');
+  if (!ov) return;
   ov.innerHTML = '';
+
+  activeGuides.forEach(g => {
+    const el = document.createElement('div');
+    if (g.type === 'v') {
+      el.style.cssText = `position: absolute; left: ${g.pos * scale}px; top: 0; width: 1px; height: 100%; border-left: 1.5px dashed #6366f1; pointer-events: none; z-index: 80;`;
+    } else {
+      el.style.cssText = `position: absolute; left: 0; top: ${g.pos * scale}px; width: 100%; height: 1px; border-top: 1.5px dashed #6366f1; pointer-events: none; z-index: 80;`;
+    }
+    ov.appendChild(el);
+  });
+
   fields.forEach(f => {
     const el = document.createElement('div');
-    el.className = 'drag-handle' + (f.id===selectedId?' selected':'');
-    el.style.cssText = `left:${f.x*scale}px;top:${f.y*scale}px;width:${f.w*scale}px;height:${(f.h||60)*scale}px;`;
+    const isSelected = selectedIds.includes(f.id);
+    el.className = 'drag-handle' + (isSelected ? ' selected' : '');
+    
+    let style = `left:${f.x*scale}px;top:${f.y*scale}px;width:${f.w*scale}px;height:${(f.h||60)*scale}px;`;
+    if (f.locked) {
+      style += `cursor: not-allowed; border-color: rgba(239, 68, 68, 0.45);`;
+    }
+    el.style.cssText = style;
 
-    const resEl = document.createElement('div');
-    resEl.className = 'resize-br';
-    resEl.addEventListener('mousedown', e => { e.stopPropagation(); startResize(e,f); });
-    el.appendChild(resEl);
+    if (f.locked) {
+      const lockIndicator = document.createElement('div');
+      lockIndicator.innerHTML = '🔒';
+      lockIndicator.style.cssText = `position: absolute; right: 4px; top: 4px; font-size: 10px; pointer-events: none; opacity: 0.8;`;
+      el.appendChild(lockIndicator);
+    }
 
-    el.addEventListener('mousedown', e => { if(e.target===resEl) return; startDrag(e,f); });
-    el.addEventListener('click',     e => { e.stopPropagation(); selectField(f.id); });
+    if (f.groupId) {
+      const groupIndicator = document.createElement('div');
+      groupIndicator.innerHTML = '🔗';
+      groupIndicator.style.cssText = `position: absolute; left: 4px; top: 4px; font-size: 10px; pointer-events: none; opacity: 0.8;`;
+      el.appendChild(groupIndicator);
+    }
+
+    if (isSelected) {
+      ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+        const node = document.createElement('div');
+        node.className = `corner-node node-${pos}`;
+        el.appendChild(node);
+      });
+    }
+
+    if (!f.locked) {
+      const resEl = document.createElement('div');
+      resEl.className = 'resize-br';
+      resEl.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        startResize(e, f);
+      });
+      el.appendChild(resEl);
+    }
+
+    el.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      if (e.target.classList.contains('resize-br')) return;
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const isMulti = e.ctrlKey || e.shiftKey;
+      if (!selectedIds.includes(f.id)) {
+        selectField(f.id, isMulti);
+      }
+      
+      startDrag(e, f);
+    });
+
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const isMulti = e.ctrlKey || e.shiftKey;
+      selectField(f.id, isMulti);
+    });
+
     ov.appendChild(el);
   });
 }
 
-function renderAll() { renderCanvas(); renderOverlay(); renderFieldList(); }
+function renderAll() { renderCanvas(); renderOverlay(); renderFieldList(); drawRulers(); }
 
 // --- Drag & Resize ---
-function startDrag(e, f) {
-  e.preventDefault(); selectField(f.id);
-  const ox=f.x, oy=f.y, sx=e.clientX, sy=e.clientY;
+function startDrag(e, primaryField) {
+  if (primaryField.locked) return;
+
+  const snapThreshold = 5;
+  const isSnappingEnabled = document.getElementById('snap-toggle')?.checked !== false;
+
+  const dragFields = fields.filter(f => selectedIds.includes(f.id) && !f.locked);
+  if (dragFields.length === 0) return;
+
+  const startCoords = dragFields.map(f => ({ id: f.id, x: f.x, y: f.y }));
+  const sx = e.clientX, sy = e.clientY;
+
   const onMove = ev => {
-    f.x = snap(Math.max(0, ox+(ev.clientX-sx)/scale));
-    f.y = snap(Math.max(0, oy+(ev.clientY-sy)/scale));
+    const dx = (ev.clientX - sx) / scale;
+    const dy = (ev.clientY - sy) / scale;
+
+    dragFields.forEach(f => {
+      const start = startCoords.find(c => c.id === f.id);
+      f.x = start.x + dx;
+      f.y = start.y + dy;
+    });
+
+    activeGuides = [];
+
+    if (isSnappingEnabled) {
+      const targets = fields.filter(f => !selectedIds.includes(f.id));
+
+      let snapX = null;
+      let snapY = null;
+      let deltaX = 0;
+      let deltaY = 0;
+
+      const pLeft = primaryField.x;
+      const pRight = primaryField.x + primaryField.w;
+      const pCenter = primaryField.x + primaryField.w / 2;
+      const pTop = primaryField.y;
+      const pBottom = primaryField.y + (primaryField.h || 60);
+      const pMiddle = primaryField.y + (primaryField.h || 60) / 2;
+
+      for (const t of targets) {
+        const tLeft = t.x;
+        const tRight = t.x + t.w;
+        const tCenter = t.x + t.w / 2;
+
+        if (Math.abs(pLeft - tLeft) < snapThreshold) { deltaX = tLeft - pLeft; snapX = tLeft; }
+        else if (Math.abs(pLeft - tRight) < snapThreshold) { deltaX = tRight - pLeft; snapX = tRight; }
+        else if (Math.abs(pLeft - tCenter) < snapThreshold) { deltaX = tCenter - pLeft; snapX = tCenter; }
+        else if (Math.abs(pRight - tLeft) < snapThreshold) { deltaX = tLeft - pRight; snapX = tLeft; }
+        else if (Math.abs(pRight - tRight) < snapThreshold) { deltaX = tRight - pRight; snapX = tRight; }
+        else if (Math.abs(pRight - tCenter) < snapThreshold) { deltaX = tCenter - pRight; snapX = tCenter; }
+        else if (Math.abs(pCenter - tLeft) < snapThreshold) { deltaX = tLeft - pCenter; snapX = tLeft; }
+        else if (Math.abs(pCenter - tRight) < snapThreshold) { deltaX = tRight - pCenter; snapX = tRight; }
+        else if (Math.abs(pCenter - tCenter) < snapThreshold) { deltaX = tCenter - pCenter; snapX = tCenter; }
+
+        if (snapX !== null) break;
+      }
+
+      for (const t of targets) {
+        const tTop = t.y;
+        const tBottom = t.y + (t.h || 60);
+        const tMiddle = t.y + (t.h || 60) / 2;
+
+        if (Math.abs(pTop - tTop) < snapThreshold) { deltaY = tTop - pTop; snapY = tTop; }
+        else if (Math.abs(pTop - tBottom) < snapThreshold) { deltaY = tBottom - pTop; snapY = tBottom; }
+        else if (Math.abs(pTop - tMiddle) < snapThreshold) { deltaY = tMiddle - pTop; snapY = tMiddle; }
+        else if (Math.abs(pBottom - tTop) < snapThreshold) { deltaY = tTop - pBottom; snapY = tTop; }
+        else if (Math.abs(pBottom - tBottom) < snapThreshold) { deltaY = tBottom - pBottom; snapY = tBottom; }
+        else if (Math.abs(pBottom - tMiddle) < snapThreshold) { deltaY = tMiddle - pBottom; snapY = tMiddle; }
+        else if (Math.abs(pMiddle - tTop) < snapThreshold) { deltaY = tTop - pMiddle; snapY = tTop; }
+        else if (Math.abs(pMiddle - tBottom) < snapThreshold) { deltaY = tBottom - pMiddle; snapY = tBottom; }
+        else if (Math.abs(pMiddle - tMiddle) < snapThreshold) { deltaY = tMiddle - pMiddle; snapY = tMiddle; }
+
+        if (snapY !== null) break;
+      }
+
+      if (snapX !== null) {
+        dragFields.forEach(f => f.x += deltaX);
+        activeGuides.push({ type: 'v', pos: snapX });
+      }
+      if (snapY !== null) {
+        dragFields.forEach(f => f.y += deltaY);
+        activeGuides.push({ type: 'h', pos: snapY });
+      }
+    }
+
+    dragFields.forEach(f => {
+      f.x = Math.max(0, Math.min(CANVAS_W - f.w, snap(f.x)));
+      f.y = Math.max(0, Math.min(CANVAS_H - (f.h || 60), snap(f.y)));
+    });
+
     renderAll();
   };
-  const onUp = () => { document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); pushHistory(); };
+
+  const onUp = () => {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    activeGuides = [];
+    renderOverlay();
+    pushHistory();
+  };
+
   document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup',   onUp);
+  document.addEventListener('mouseup', onUp);
 }
 function startResize(e, f) {
+  if (f.locked) return;
   e.preventDefault();
   const sw=f.w, sh=f.h||60, sx=e.clientX, sy=e.clientY;
   const onMove = ev => {
@@ -2707,14 +3136,16 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  const f = fields.find(f => f.id === selectedId);
-  if (!f || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+  const activeFields = fields.filter(f => selectedIds.includes(f.id) && !f.locked);
+  if (activeFields.length === 0 || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
   e.preventDefault();
   const step = e.shiftKey ? GRID : 1;
-  if (e.key === 'ArrowLeft') f.x = Math.max(0, f.x - step);
-  if (e.key === 'ArrowRight') f.x = Math.min(CANVAS_W - (f.w || 40), f.x + step);
-  if (e.key === 'ArrowUp') f.y = Math.max(0, f.y - step);
-  if (e.key === 'ArrowDown') f.y = Math.min(CANVAS_H - (f.h || 20), f.y + step);
+  activeFields.forEach(f => {
+    if (e.key === 'ArrowLeft') f.x = Math.max(0, f.x - step);
+    if (e.key === 'ArrowRight') f.x = Math.min(CANVAS_W - (f.w || 40), f.x + step);
+    if (e.key === 'ArrowUp') f.y = Math.max(0, f.y - step);
+    if (e.key === 'ArrowDown') f.y = Math.min(CANVAS_H - (f.h || 20), f.y + step);
+  });
   renderAll();
   syncPropsPanel();
   pushHistory();

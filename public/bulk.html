@@ -73,6 +73,30 @@
     </div>
     <input type="file" id="csv-file" accept=".csv,.txt" style="display:none;" onchange="loadCsv(this)">
 
+    <div id="mapping-container" style="margin-top:16px; margin-bottom:16px; display:none; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:16px; border-radius:8px;">
+      <h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text); display:flex; align-items:center; gap:6px;">📋 Ustunlarni moslashtirish (Mapping)</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">CSV ustunlarini tegishli maydonlarga biriktiring:</p>
+      
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <div>
+          <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">Oluvchi ismi *</label>
+          <select id="map-name" class="form-control select-sm" style="width:100%; height:34px; padding:4px 8px; font-size:12px; background:#111625; color:#fff; border-color:rgba(255,255,255,0.08);" onchange="remapCsv()"></select>
+        </div>
+        <div>
+          <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">Kurs / Fan nomi</label>
+          <select id="map-course" class="form-control select-sm" style="width:100%; height:34px; padding:4px 8px; font-size:12px; background:#111625; color:#fff; border-color:rgba(255,255,255,0.08);" onchange="remapCsv()"></select>
+        </div>
+        <div>
+          <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">Berilgan sana</label>
+          <select id="map-date" class="form-control select-sm" style="width:100%; height:34px; padding:4px 8px; font-size:12px; background:#111625; color:#fff; border-color:rgba(255,255,255,0.08);" onchange="remapCsv()"></select>
+        </div>
+        <div>
+          <label style="display:block; font-size:11px; font-weight:600; color:var(--text-muted); margin-bottom:4px;">Elektron pochta (Email)</label>
+          <select id="map-email" class="form-control select-sm" style="width:100%; height:34px; padding:4px 8px; font-size:12px; background:#111625; color:#fff; border-color:rgba(255,255,255,0.08);" onchange="remapCsv()"></select>
+        </div>
+      </div>
+    </div>
+
     <div id="csv-preview" style="margin-top:16px; display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <strong id="csv-count"></strong>
@@ -180,34 +204,146 @@
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const lines   = e.target.result.trim().split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      csvHeaders = headers;
-      if (!headers.includes('recipient_name')) {
-        toast("CSV faylda recipient_name ustuni bo'lishi shart", 'error');
+      const lines = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length === 0) {
+        toast("Fayl bo'sh", 'error');
         clearCsv();
         return;
       }
-      csvRows       = [];
+
+      let sep = ',';
+      if (lines[0].includes(';')) sep = ';';
+      else if (lines[0].includes('\t')) sep = '\t';
+
+      const parseCsvLine = (line, separator) => {
+        let vals = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQuotes = !inQuotes;
+          } else if (ch === separator && !inQuotes) {
+            vals.push(cur.trim().replace(/^["']|["']$/g, ''));
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        vals.push(cur.trim().replace(/^["']|["']$/g, ''));
+        return vals;
+      };
+
+      const headers = parseCsvLine(lines[0], sep);
+      csvHeaders = headers;
+      csvRows = [];
 
       for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const vals = lines[i].split(',').map(v => v.trim());
-        const row  = {};
+        const vals = parseCsvLine(lines[i], sep);
+        const row = {};
         headers.forEach((h, j) => row[h] = vals[j] || '');
         csvRows.push(row);
       }
 
-      document.getElementById('csv-count').textContent = `${csvRows.length} ta satr topildi`;
-      document.getElementById('csv-table').innerHTML = `
-        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>${csvRows.slice(0, 5).map(r => `<tr>${headers.map(h => `<td>${r[h]}</td>`).join('')}</tr>`).join('')}
-        ${csvRows.length > 5 ? `<tr><td colspan="${headers.length}" style="text-align:center; color:var(--text-muted);">... va yana ${csvRows.length-5} ta</td></tr>` : ''}
-        </tbody>`;
-      document.getElementById('csv-preview').style.display = '';
-      document.getElementById('gen-btn').disabled = false;
+      const selectIds = ['map-name', 'map-course', 'map-date', 'map-email'];
+      selectIds.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.innerHTML = `<option value="">-- Tanlang --</option>` + 
+          headers.map(h => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join('');
+      });
+
+      headers.forEach(h => {
+        const hl = h.toLowerCase();
+        if (hl.includes('name') || hl.includes('ism') || hl.includes('fio') || hl.includes('recipient')) {
+          document.getElementById('map-name').value = h;
+        } else if (hl.includes('course') || hl.includes('kurs') || hl.includes('mavzu') || hl.includes('subject')) {
+          document.getElementById('map-course').value = h;
+        } else if (hl.includes('date') || hl.includes('sana') || hl.includes('issued')) {
+          document.getElementById('map-date').value = h;
+        } else if (hl.includes('email') || hl.includes('pochta') || hl.includes('mail')) {
+          document.getElementById('map-email').value = h;
+        }
+      });
+
+      document.getElementById('mapping-container').style.display = '';
+      remapCsv();
     };
     reader.readAsText(file);
+  }
+
+  function remapCsv() {
+    const nameCol = document.getElementById('map-name').value;
+    const btn = document.getElementById('gen-btn');
+    
+    if (!nameCol) {
+      btn.disabled = true;
+      document.getElementById('csv-count').textContent = `Ustunlarni moslang (Oluvchi ismi tanlanishi shart)`;
+      document.getElementById('csv-preview').style.display = 'none';
+      return;
+    }
+
+    btn.disabled = false;
+    document.getElementById('csv-preview').style.display = '';
+    document.getElementById('csv-count').textContent = `${csvRows.length} ta satr aniqlandi`;
+
+    const nameC = document.getElementById('map-name').value;
+    const courseC = document.getElementById('map-course').value;
+    const dateC = document.getElementById('map-date').value;
+    const emailC = document.getElementById('map-email').value;
+
+    document.getElementById('csv-table').innerHTML = `
+      <thead>
+        <tr>
+          <th>Oluvchi ismi (${escapeHtml(nameC)})</th>
+          <th>Kurs / Fan (${courseC ? escapeHtml(courseC) : '—'})</th>
+          <th>Sana (${dateC ? escapeHtml(dateC) : '—'})</th>
+          <th>Email (${emailC ? escapeHtml(emailC) : '—'})</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${csvRows.slice(0, 5).map(r => `
+          <tr>
+            <td>${escapeHtml(r[nameC] || '')}</td>
+            <td>${courseC ? escapeHtml(r[courseC] || '') : '<span style="color:var(--text-muted);">-- bo\'sh --</span>'}</td>
+            <td>${dateC ? escapeHtml(r[dateC] || '') : '<span style="color:var(--text-muted);">-- bo\'sh --</span>'}</td>
+            <td>${emailC ? escapeHtml(r[emailC] || '') : '<span style="color:var(--text-muted);">-- bo\'sh --</span>'}</td>
+          </tr>
+        `).join('')}
+        ${csvRows.length > 5 ? `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">... va yana ${csvRows.length - 5} ta qator</td></tr>` : ''}
+      </tbody>`;
+  }
+
+  function getMappedCsvFile() {
+    const nameCol = document.getElementById('map-name').value;
+    const courseCol = document.getElementById('map-course').value;
+    const dateCol = document.getElementById('map-date').value;
+    const emailCol = document.getElementById('map-email').value;
+
+    const escapeCsvVal = val => {
+      if (val === undefined || val === null) return '';
+      let s = String(val).replace(/"/g, '""');
+      if (s.includes(',') || s.includes('\n') || s.includes('"')) {
+        s = `"${s}"`;
+      }
+      return s;
+    };
+
+    const headerLine = 'recipient_name,course_name,issued_date,recipient_email';
+    const csvLines = [headerLine];
+
+    csvRows.forEach(r => {
+      const rowName = nameCol ? (r[nameCol] || '') : '';
+      const rowCourse = courseCol ? (r[courseCol] || '') : '';
+      const rowDate = dateCol ? (r[dateCol] || '') : '';
+      const rowEmail = emailCol ? (r[emailCol] || '') : '';
+
+      csvLines.push(`${escapeCsvVal(rowName)},${escapeCsvVal(rowCourse)},${escapeCsvVal(rowDate)},${escapeCsvVal(rowEmail)}`);
+    });
+
+    const finalCsvText = csvLines.join('\n');
+    const blob = new Blob([finalCsvText], { type: 'text/csv;charset=utf-8;' });
+    return new File([blob], 'mapped_data.csv', { type: 'text/csv' });
   }
 
   function clearCsv() {
@@ -216,6 +352,7 @@
     csvFile = null;
     document.getElementById('csv-file').value = '';
     document.getElementById('csv-preview').style.display = 'none';
+    document.getElementById('mapping-container').style.display = 'none';
     document.getElementById('gen-btn').disabled = true;
   }
 
@@ -247,8 +384,9 @@ Toshmatov Bobur,English B2,2026-01-15,bobur@mail.uz`;
     btn.disabled = true;
     btn.textContent = 'Yaratilmoqda...';
 
+    const finalCsvFile = getMappedCsvFile();
     const form = new FormData();
-    form.append('file', csvFile, csvFile.name || 'data.csv');
+    form.append('file', finalCsvFile, 'mapped_data.csv');
     if (templateId) form.append('template_id', templateId);
     form.append('doc_type', document.getElementById('bulk-doctype').value || 'certificate');
 
@@ -284,8 +422,9 @@ Toshmatov Bobur,English B2,2026-01-15,bobur@mail.uz`;
     btn.disabled = true;
     btn.textContent = 'Yaratilmoqda...';
 
+    const finalCsvFile = getMappedCsvFile();
     const form = new FormData();
-    form.append('file', csvFile, csvFile.name || 'data.csv');
+    form.append('file', finalCsvFile, 'mapped_data.csv');
     if (templateId) form.append('template_id', templateId);
     form.append('doc_type', document.getElementById('bulk-doctype').value || 'certificate');
 
