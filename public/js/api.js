@@ -1,3 +1,28 @@
+// Auto-sync token/user from cross-subdomain cookies if available
+(function syncCookiesToLocalStorage() {
+  const getCookie = (name) => {
+    const matches = document.cookie.match(new RegExp(
+      "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+    ));
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+  };
+
+  const googleToken = getCookie('google_token');
+  const googleUser = getCookie('google_user');
+
+  if (googleToken && googleUser) {
+    localStorage.setItem('token', googleToken);
+    localStorage.setItem('user', googleUser);
+    
+    // Clear cookies to avoid re-syncing or polluting cookies
+    const domain = window.location.hostname.endsWith('sertifikat-qr.uz') ? '.sertifikat-qr.uz' : '';
+    document.cookie = "google_token=; path=/; max-age=0;" + (domain ? " domain=" + domain + ";" : "");
+    document.cookie = "google_user=; path=/; max-age=0;" + (domain ? " domain=" + domain + ";" : "");
+    document.cookie = "google_token=; path=/; max-age=0;";
+    document.cookie = "google_user=; path=/; max-age=0;";
+  }
+})();
+
 const API_BASE = '/api';
 
 const Api = {

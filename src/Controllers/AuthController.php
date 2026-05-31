@@ -885,7 +885,23 @@ class AuthController {
                 'is_verified' => 1
             ];
 
-            $redirectUrl = '/login.html?google_token=' . urlencode($token) . '&google_user=' . urlencode(json_encode($userSafe));
+            $host = $_SERVER['HTTP_HOST'] ?? 'sertifikat-qr.uz';
+            $redirectHost = $host;
+            if (strpos($host, 'www.sertifikat-qr.uz') !== false) {
+                $redirectHost = 'sertifikat-qr.uz';
+            }
+
+            $cookieDomain = '';
+            if (preg_match('/sertifikat-qr\.uz$/i', $host)) {
+                $cookieDomain = '.sertifikat-qr.uz';
+            }
+
+            $isSecure = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+            setcookie('google_token', $token, time() + 3600, '/', $cookieDomain, $isSecure, false);
+            setcookie('google_user', json_encode($userSafe), time() + 3600, '/', $cookieDomain, $isSecure, false);
+
+            $scheme = $isSecure ? 'https' : 'http';
+            $redirectUrl = $scheme . '://' . $redirectHost . '/login.html?google_token=' . urlencode($token) . '&google_user=' . urlencode(json_encode($userSafe));
             header("Location: {$redirectUrl}");
             exit;
         } catch (\Throwable $e) {
